@@ -1,0 +1,71 @@
+---
+title: "Run in production"
+description: "Manage credentials, spending, connection lifecycle, and failures in deployed agents."
+---
+
+Before deploying, check your runtime, credentials, spending settings, and error handling.
+
+## Deployment checklist
+
+<Steps>
+  <Step title="Choose a supported runtime">
+    Use ESM on Node.js 22.18 or later. See [compatibility](/reference/compatibility) for verified Node and framework versions. The Claude Agent SDK also needs its supported process environment.
+  </Step>
+  <Step title="Store credentials on the server">
+    Set `AGENTMUXER_API_KEY` in your deployment's secret store, or pass the key through `agentmuxer({ apiKey })`. Keep your model-provider key separate. Never send an application key to a browser, mobile bundle, or model prompt.
+  </Step>
+  <Step title="Set spending and approval policy">
+    Applications default to no spending limit and can use their owner's available balance. Set a lifetime application cap when you need a hard cumulative limit. Configure payment confirmation for an interactive or unattended workflow. See [billing and approvals](/guides/billing).
+  </Step>
+  <Step title="Record useful run information">
+    Use your agent framework's tracing to connect a user request to model and tool activity. Retain request and invocation identifiers from AgentMuxer responses for investigation. Keep API keys and authorization headers out of logs and traces.
+  </Step>
+</Steps>
+
+## Connection lifecycle
+
+| Integration | Lifecycle |
+| --- | --- |
+| OpenAI Agents | The helper creates hosted MCP configuration; OpenAI connects to AgentMuxer. There is no SDK connection to close. |
+| Claude Agent SDK | The helper creates MCP server configuration. Claude's runner manages the connection. |
+| Vercel AI SDK | Await `agentmuxer()`, finish the run or consume the complete stream, then await `close()` in `finally`. |
+
+Keep each Vercel connection alive for the full run that uses it. If you share a connection, closing it while another run is active interrupts that run. For HTTP streaming, cleanup must run after completion, failure, or cancellation of the stream.
+
+## Timeouts, cancellations, and retries
+
+Set request and run limits using your agent framework. A stopped run or dropped connection doesn't mean a purchase failed. AgentMuxer may already have accepted it.
+
+<Warning>
+  Do not retry a purchase with a new idempotency key after a timeout. Preserve the original key when replaying the same purchase request. A new key represents a new purchase.
+</Warning>
+
+The Vercel helper disables automatic MCP tool-call retries. When retrying a paid call, keep the original arguments and idempotency key. If you're unsure whether it completed, save the invocation ID and [check the existing purchase](/reference/troubleshooting).
+
+## Handle tool responses
+
+Keep cost, invocation ID, and any refusal or confirmation details when processing tool results.
+
+| Response | Your application's next step |
+| --- | --- |
+| Successful tool result | Show or process the result; retain cost and invocation details. |
+| Authentication failure | Check the application key and whether the application or key is disabled/revoked. |
+| Insufficient balance or spending limit | Direct the account owner to the dashboard; do not keep retrying. |
+| Approval required | Resume through a supported confirmation flow, or explain the required account action. |
+| Revised price | Ask for explicit acceptance of the new terms; do not silently raise the budget. |
+| Uncertain outcome after a timeout | Keep the original idempotency key and investigate the existing purchase. |
+
+## Logging and support
+
+The SDK works with your framework's logging and tracing; you do not need an AgentMuxer-specific tracing setup. Capture the SDK and framework versions, your own run identifier, and request/invocation identifiers returned by tools. Avoid logging entire connection options because they can contain your key.
+
+For help, send a minimal reproduction and those identifiers to [founders@amorphiclabs.com](mailto:founders@amorphiclabs.com). Remove secrets and sensitive tool inputs first.
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" icon="key" href="/sdk/applications">
+    Rotate credentials and manage application access.
+  </Card>
+  <Card title="Compatibility and upgrades" icon="arrows-rotate" href="/reference/compatibility">
+    Check supported versions before an upgrade.
+  </Card>
+</CardGroup>

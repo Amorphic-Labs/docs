@@ -1,0 +1,116 @@
+---
+title: "Claude Agent SDK"
+description: "Build a research agent with AgentMuxer and Claude Agent SDK."
+---
+
+In this guide, you'll build an agent that researches the latest TypeScript release and reports what it found, its sources, and the tool cost.
+
+<Accordion title="Add to an existing agent">
+  Register AgentMuxer in your existing `query()` options:
+
+  ```typescript
+  import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
+
+  const options = {
+    mcpServers: { agentmuxer: agentmuxer() },
+    allowedTools: ["mcp__agentmuxer__*"],
+  };
+  ```
+
+  `allowedTools` lets Claude call AgentMuxer tools without a separate Claude permission prompt.
+</Accordion>
+
+## Before you start
+
+- Node.js 22.18 or later with ESM; see [compatibility](/reference/compatibility). Your host must also support the [Claude Agent SDK process requirements](https://code.claude.com/docs/en/agent-sdk/hosting).
+- An [AgentMuxer application key](/sdk/applications) and credits for paid calls.
+- An Anthropic API key for the model.
+
+<Note>
+  This example asks the agent to spend up to \$0.10 on one tool call. Model charges are separate. Set an [application spending limit](/sdk/applications) if you need a hard cap; the prompt alone doesn't enforce one.
+
+  This example cannot collect payment confirmation. [Configure your account for unattended purchases](/guides/billing#unattended-applications) before running it. This setting also affects your personal agents.
+</Note>
+
+<Steps>
+  <Step title="Install">
+    In a new directory, create an ESM project and install the integration:
+
+    ```bash
+    mkdir my-agent
+    cd my-agent
+    npm init -y
+    npm pkg set type=module
+    npm install @agentmuxer/sdk @anthropic-ai/claude-agent-sdk
+    ```
+  </Step>
+  <Step title="Set your keys">
+    Set both keys in your terminal:
+
+    ```bash
+    export AGENTMUXER_API_KEY='your-application-key'
+    export ANTHROPIC_API_KEY='your-model-provider-key'
+    ```
+
+    No browser sign-in is needed. Keep both keys on your server and out of source control.
+  </Step>
+  <Step title="Run Claude with AgentMuxer">
+    Save this as `agent.ts`. The highlighted lines connect AgentMuxer and let Claude use its tools:
+
+    ```typescript agent.ts highlight={11-12}
+    import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
+    import { query } from "@anthropic-ai/claude-agent-sdk";
+
+    const prompt = `Use AgentMuxer to research the latest TypeScript release.
+    Summarize three changes with sources and report the tool cost.
+    Spend at most $0.10 on one tool call. Stop if it costs more.`;
+
+    for await (const message of query({
+      prompt,
+      options: {
+        mcpServers: { agentmuxer: agentmuxer() },
+        allowedTools: ["mcp__agentmuxer__*"],
+      },
+    })) {
+      if (message.type !== "result") continue;
+      if (message.subtype !== "success") {
+        throw new Error(message.errors.join("\n") || message.subtype);
+      }
+      if (message.is_error) {
+        throw new Error(message.result);
+      }
+      console.log(message.result);
+    }
+    ```
+
+    `query()` runs Claude's agent loop. The `for await` loop reads its messages; this example prints the final answer or throws if the run fails.
+  </Step>
+  <Step title="Run">
+    ```bash
+    node agent.ts
+    ```
+
+    The example asks the agent to print:
+
+    - Three TypeScript release changes.
+    - Sources for the summary.
+    - The actual tool cost, or the reason it could not complete the purchase.
+
+    To try another task, edit `prompt`. Include the spending you allow.
+  </Step>
+</Steps>
+
+## Customize permissions
+
+`allowedTools` preapproves AgentMuxer calls in Claude. It does not bypass AgentMuxer payment confirmation or hide unlisted tools. Configure `disallowedTools` or `canUseTool` on your Claude agent when you need more control.
+
+The helper's `tools` option sets per-tool policies, not a tool allowlist. It also accepts native `timeout` and `alwaysLoad` options. See the [SDK reference](/reference/sdk) for details.
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" icon="key" href="/sdk/applications">
+    Manage credentials and spending limits.
+  </Card>
+  <Card title="Run in production" icon="server" href="/sdk/production">
+    Handle deployment, failures, and tracing.
+  </Card>
+</CardGroup>

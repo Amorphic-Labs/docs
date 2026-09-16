@@ -1,47 +1,45 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "TypeScript SDK"
+description: "Add AgentMuxer tools to the agent framework you already use."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+Let your agent find and use tools for web research, page extraction, company enrichment, and more—all through your AgentMuxer account.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+## Choose your framework
 
-## Prerequisites
+Choose a guide to build your first research agent.
 
-Before you begin, you must have:
+<CardGroup cols={3}>
+  <Card title="OpenAI Agents" icon="code" href="/sdk/openai">
+    Add one hosted MCP tool to your agent.
+  </Card>
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
+  <Card title="Claude Agent SDK" icon="terminal" href="/sdk/claude-agent">
+    Add AgentMuxer to your MCP server configuration.
+  </Card>
 
-## Get started
+  <Card title="Vercel AI SDK" icon="bolt" href="/sdk/ai-sdk">
+    Load AgentMuxer tools into a ToolLoopAgent.
+  </Card>
+</CardGroup>
 
-<Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+## What you need
 
-    ```bash
-    npm install your-package
-    ```
-  </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+- **Node.js 22.18 or later and ESM.** See [tested runtimes and framework versions](/reference/compatibility).
+- **An application key.** Create one in [Applications](https://app.agentmuxer.com/dashboard/applications). Keep it on your server as `AGENTMUXER_API_KEY`; no OAuth sign-in is needed.
+- **A model-provider key.** Your existing provider runs the model and bills you separately.
+- **Credits for paid tools.** The tutorials request one purchase up to \$0.10. Read [billing and approvals](/guides/billing) to choose spending limits and payment-confirmation settings.
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+## Other frameworks
 
-    ```bash
-    your-cli start
-    ```
-  </Step>
-</Steps>
+If your framework supports remote MCP servers, [connect with MCP](/sdk/native-mcp). You don't need the AgentMuxer SDK.
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+<CardGroup cols={2}>
+  <Card title="Applications and keys" href="/sdk/applications">
+    Manage credentials and application spending limits.
+  </Card>
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+  <Card title="SDK reference" href="/reference/sdk">
+    Find helper options, defaults, and return values.
+  </Card>
+</CardGroup>

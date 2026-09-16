@@ -1,0 +1,70 @@
+---
+title: "Applications and API keys"
+description: "Create credentials for your agent and manage its spending and access."
+---
+
+An application groups your agent's API keys, usage, and optional lifetime spending limit. Calls made with those keys use your AgentMuxer account's balance. Your end users do not need to sign in to AgentMuxer.
+
+<Steps>
+  <Step title="Create an application">
+    Open [Applications](https://agentmuxer.com/dashboard/applications), choose **Create application**, and enter a name.
+
+    Optionally enter a **Lifetime spending limit (USD)**. Leave it blank for **No limit**, the default. The limit is shared by all keys for this application and does not reset.
+  </Step>
+  <Step title="Save the key">
+    Copy the key when it appears; it is shown only once. Store it in your server environment or secret manager:
+
+    ```sh
+    export AGENTMUXER_API_KEY='your-application-key'
+    ```
+
+    Your model provider needs its own credentials. Do not expose the AgentMuxer key in client-side code or include it in the agent's prompt.
+  </Step>
+  <Step title="Add the SDK integration">
+    The SDK reads `AGENTMUXER_API_KEY`, or you can pass `agentmuxer({ apiKey })`. No browser sign-in is needed.
+
+    <CardGroup cols={3}>
+      <Card title="OpenAI Agents" href="/sdk/openai">Add `agentmuxer()` to your agent's tools.</Card>
+      <Card title="Claude Agent SDK" href="/sdk/claude-agent">Add AgentMuxer to `mcpServers`.</Card>
+      <Card title="Vercel AI SDK" href="/sdk/ai-sdk">Load tools and close the connection after use.</Card>
+    </CardGroup>
+  </Step>
+</Steps>
+
+## Enable purchases
+
+Add credits to your account. If payment confirmation is enabled, your application needs a way to collect it. For agents that run without a person present, review [unattended purchases](/guides/billing#unattended-applications).
+
+## Manage the application
+
+Choose **Manage** beside the application to update its name, spending limit, or keys.
+
+<AccordionGroup>
+  <Accordion title="Rotate a key without interrupting the application">
+    1. Select **Create replacement key** and save the new key.
+    2. Update your server's secret and deploy or restart as needed.
+    3. Confirm your application works with the replacement.
+    4. Select **Revoke key** for the old key.
+
+    The old key keeps working until you revoke it. Rotation preserves the application's spending limit and usage history.
+  </Accordion>
+  <Accordion title="Revoke one key">
+    Select **Revoke key** beside the key you want to remove. Other active keys for the application still work.
+
+    Revoke an exposed key immediately.
+  </Accordion>
+  <Accordion title="Change the lifetime spending limit">
+    Enter a positive USD amount or leave the field blank for no limit, then choose **Save limit**. The limit must cover money already spent and calls on hold.
+
+    Changing a limit does not reset spending or fund the account. All of the application's keys share the same limit.
+  </Accordion>
+  <Accordion title="Disable the application">
+    Select **Disable application** and confirm. Its keys stop authorizing new calls, and its history remains available. Calls already authorized can still finish.
+
+    A disabled application cannot issue new keys. Create a new application if you need new access.
+  </Accordion>
+</AccordionGroup>
+
+## Review usage
+
+The Applications table shows **Spent** and **On hold** for each application. Select **History** to inspect its calls. Keep invocation IDs when contacting support; never include the application key.

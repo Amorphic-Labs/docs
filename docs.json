@@ -3,42 +3,103 @@
   "theme": "mint",
   "name": "AgentMuxer",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#087C56",
+    "light": "#6FD4AD",
+    "dark": "#087C56"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.ico",
   "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Marketplace",
+          "icon": "store",
+          "href": "https://agentmuxer.com"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "TypeScript SDK",
+          "icon": "code",
+          "href": "https://www.npmjs.com/package/@agentmuxer/sdk"
         }
       ]
-    }
+    },
+    "tabs": [
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "sdk/openai",
+              "sdk/claude-agent",
+              "sdk/ai-sdk",
+              "sdk/native-mcp"
+            ]
+          },
+          {
+            "group": "Your application",
+            "pages": [
+              "sdk/applications",
+              "sdk/production"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Use AgentMuxer",
+            "pages": [
+              "guides/how-it-works",
+              "guides/connect",
+              "guides/use-tools"
+            ]
+          },
+          {
+            "group": "Account and trust",
+            "pages": [
+              "guides/billing",
+              "guides/security"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/sdk",
+              "reference/mcp",
+              "reference/compatibility",
+              "reference/troubleshooting",
+              "changelog"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "https://agentmuxer.com"
   },
   "navbar": {
     "links": [
+      {
+        "href": "/changelog",
+        "label": "Changelog"
+      },
       {
         "label": "Support",
         "href": "mailto:founders@amorphiclabs.com"
@@ -69,5 +130,24 @@
       "linkedin": "https://linkedin.com/company/amorphic-labs"
     }
   },
-  "description": "The next billion software users are AI agents, yet agents still can't act on their own: every paid tool they need runs through a human making accounts, managing API keys, and guessing which provider is best. We are the capability marketplace built for agents: one MCP and one balance through which agents find, pay for, and use APIs, data, skills, other agents, and software at runtime, with every request routed to the best provider based on benchmarks from real tasks and outcome feedback from the agents themselves."
+  "description": "Give your agents one connection to discover and use tools. Build with the AgentMuxer SDK or connect your existing agent.",
+  "appearance": {
+    "default": "system"
+  },
+  "background": {
+    "color": {
+      "light": "#F2F3F0",
+      "dark": "#0A0B0C"
+    }
+  },
+  "fonts": {
+    "heading": {
+      "family": "Spectral",
+      "weight": 300
+    },
+    "body": {
+      "family": "Space Grotesk"
+    }
+  },
+  "styling": {}
 }

@@ -1,0 +1,63 @@
+---
+title: "Compatibility and upgrades"
+description: "Supported runtimes, integration requirements, and SDK versioning."
+---
+
+This page describes `@agentmuxer/sdk` 0.1.0.
+
+## Runtime support
+
+| Environment | Support |
+| --- | --- |
+| Node.js 22.18+ with ESM | Supported; tested on Node 22 and 24 |
+| CommonJS | Not supported |
+| Browser or mobile bundle | Not supported; keep application keys on your server |
+| Bun, Deno, Workers, or Edge runtimes | Not currently supported by this SDK |
+
+For Claude Agent SDK, also check its [hosting requirements](https://code.claude.com/docs/en/agent-sdk/hosting).
+
+## Framework dependencies
+
+Install only the dependencies for your integration. The package declares these optional peer ranges:
+
+| Import | Framework dependency |
+| --- | --- |
+| `@agentmuxer/sdk/openai` | `@openai/agents ^0.18.0` |
+| `@agentmuxer/sdk/claude-agent` | `@anthropic-ai/claude-agent-sdk ^0.3.273` |
+| `@agentmuxer/sdk/ai-sdk` | `@ai-sdk/mcp ^2.0.50` |
+
+Each integration guide includes all packages needed to run its example.
+
+## Approvals and connection behavior
+
+| Integration | Connection | What your application handles |
+| --- | --- | --- |
+| OpenAI Agents | OpenAI's hosted MCP connection | OpenAI approval interruptions if you opt into `requireApproval: "always"` |
+| Claude Agent SDK | HTTP MCP server in the Claude runtime | Native tool permission configuration |
+| Vercel AI SDK | MCP client created by the helper | Result/stream consumption and `close()` |
+
+Framework approval is separate from AgentMuxer's account payment confirmation. The Vercel helper in SDK 0.1.0 cannot resume a purchase that requires human payment confirmation.
+
+See [billing and approvals](/guides/billing) for unattended runs. The helper never changes your account's confirmation setting.
+
+## Other integrations
+
+[Native MCP recipes](/sdk/native-mcp) cover frameworks and hosted connectors that accept remote MCP configuration. These are separate from the three SDK helpers above. Follow each client's requirements for authentication, approvals, and connection cleanup.
+
+For personal-agent setup, use [Connect your agent](/guides/connect).
+
+## Upgrading
+
+<Steps>
+  <Step title="Read the changelog">
+    Review [release notes](/changelog) before upgrading, especially between minor versions during `0.x`.
+  </Step>
+  <Step title="Check your dependencies">
+    Confirm that your runtime and framework versions satisfy the new package's requirements.
+  </Step>
+  <Step title="Run your integration">
+    Verify authentication, tool execution, approval behavior, and cleanup in your application's environment before rollout.
+  </Step>
+</Steps>
+
+During `0.x`, minor releases may include breaking changes or new features. Patch releases contain backward-compatible fixes. SDK versions are independent of MCP protocol versions.

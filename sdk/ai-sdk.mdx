@@ -1,0 +1,128 @@
+---
+title: "Vercel AI SDK"
+description: "Build a research agent with AgentMuxer and Vercel AI SDK."
+---
+
+In this guide, you'll build an agent that researches the latest TypeScript release and reports what it found, its sources, and the tool cost.
+
+<Accordion title="Add to an existing agent">
+  Use your existing `model` and `prompt` with AgentMuxer tools:
+
+  ```typescript
+  import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
+  import { ToolLoopAgent } from "ai";
+
+  const mux = await agentmuxer();
+  try {
+    const agent = new ToolLoopAgent({ model, tools: mux.tools });
+    const result = await agent.generate({ prompt });
+    console.log(result.text);
+  } finally {
+    await mux.close();
+  }
+  ```
+
+  The helper returns `{ tools, close }`. It does not choose a model or run the agent.
+</Accordion>
+
+## Before you start
+
+- Node.js 22.18 or later with ESM; see [compatibility](/reference/compatibility).
+- An [AgentMuxer application key](/sdk/applications) and credits for paid calls.
+- An OpenAI API key for the model.
+
+<Note>
+  This example asks the agent to spend up to \$0.10 on one tool call. Model charges are separate. Set an [application spending limit](/sdk/applications) if you need a hard cap; the prompt alone doesn't enforce one.
+
+  This example cannot collect payment confirmation. [Configure your account for unattended purchases](/guides/billing#unattended-applications) before running it. This setting also affects your personal agents.
+</Note>
+
+<Steps>
+  <Step title="Install">
+    In a new directory, create an ESM project and install the integration:
+
+    ```bash
+    mkdir my-agent
+    cd my-agent
+    npm init -y
+    npm pkg set type=module
+    npm install @agentmuxer/sdk @ai-sdk/mcp ai @ai-sdk/openai zod
+    ```
+  </Step>
+  <Step title="Set your keys">
+    Set both keys in your terminal:
+
+    ```bash
+    export AGENTMUXER_API_KEY='your-application-key'
+    export OPENAI_API_KEY='your-model-provider-key'
+    ```
+
+    No browser sign-in is needed. Keep both keys on your server and out of source control.
+  </Step>
+  <Step title="Create your agent">
+    Save this as `agent.ts`:
+
+    ```typescript agent.ts highlight={9,13,18}
+    import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
+    import { openai } from "@ai-sdk/openai";
+    import { ToolLoopAgent } from "ai";
+
+    const prompt = `Use AgentMuxer to research the latest TypeScript release.
+    Summarize three changes with sources and report the tool cost.
+    Spend at most $0.10 on one tool call. Stop if it costs more.`;
+
+    const mux = await agentmuxer();
+    try {
+      const agent = new ToolLoopAgent({
+        model: openai("gpt-5.5"),
+        tools: mux.tools,
+      });
+      const result = await agent.generate({ prompt });
+      console.log(result.text);
+    } finally {
+      await mux.close();
+    }
+    ```
+  </Step>
+  <Step title="Run">
+    ```bash
+    node agent.ts
+    ```
+
+    The example asks the agent to print:
+
+    - Three TypeScript release changes.
+    - Sources for the summary.
+    - The actual tool cost, or the reason it could not complete the purchase.
+
+    To try another task, edit `prompt`. Include the spending you allow.
+  </Step>
+</Steps>
+
+## Stream the result
+
+In `agent.ts`, replace the `agent.generate()` call and `console.log(result.text)` with:
+
+```typescript
+const result = await agent.stream({ prompt });
+for await (const part of result.textStream) {
+  process.stdout.write(part);
+}
+```
+
+Keep this inside the `try` block. The existing `finally` closes the connection after you consume the stream. For an HTTP response stream, attach cleanup to completion, error, and cancellation; do not close the connection when you merely return the stream.
+
+## Connection options and approvals
+
+The helper accepts `initializationOptions` and `onUncaughtError` and disables automatic MCP tool-call retries. Configure model behavior and tool permissions in your AI SDK agent. See the [SDK reference](/reference/sdk).
+
+In SDK 0.1.0, the helper does not expose a flow for resuming AgentMuxer purchase-confirmation requests. Use unattended purchases as described above or a client with confirmation support. Application spending limits still apply.
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" icon="key" href="/sdk/applications">
+    Manage credentials and spending limits.
+  </Card>
+  <Card title="Run in production" icon="server" href="/sdk/production">
+    Handle deployment, failures, and tracing.
+  </Card>
+</CardGroup>

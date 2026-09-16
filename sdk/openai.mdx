@@ -1,0 +1,105 @@
+---
+title: "OpenAI Agents"
+description: "Build a research agent with AgentMuxer and OpenAI Agents."
+---
+
+In this guide, you'll build an agent that researches the latest TypeScript release and reports what it found, its sources, and the tool cost.
+
+<Accordion title="Add to an existing agent">
+  Import the helper and add it to your agent's `tools`:
+
+  ```typescript
+  import { agentmuxer } from "@agentmuxer/sdk/openai";
+  import { Agent } from "@openai/agents";
+
+  const agent = new Agent({
+    name: "Research assistant",
+    tools: [agentmuxer()],
+  });
+  ```
+</Accordion>
+
+## Before you start
+
+- Node.js 22.18 or later with ESM; see [compatibility](/reference/compatibility).
+- An [AgentMuxer application key](/sdk/applications) and credits for paid calls.
+- An OpenAI API key for the model.
+
+<Note>
+  This example asks the agent to spend up to \$0.10 on one tool call. Model charges are separate. Set an [application spending limit](/sdk/applications) if you need a hard cap; the prompt alone doesn't enforce one.
+
+  This example cannot collect payment confirmation. [Configure your account for unattended purchases](/guides/billing#unattended-applications) before running it. This setting also affects your personal agents.
+</Note>
+
+<Steps>
+  <Step title="Install">
+    In a new directory, create an ESM project and install the integration:
+
+    ```bash
+    mkdir my-agent
+    cd my-agent
+    npm init -y
+    npm pkg set type=module
+    npm install @agentmuxer/sdk @openai/agents
+    ```
+  </Step>
+  <Step title="Set your keys">
+    Set both keys in your terminal:
+
+    ```bash
+    export AGENTMUXER_API_KEY='your-application-key'
+    export OPENAI_API_KEY='your-model-provider-key'
+    ```
+
+    No browser sign-in is needed. Keep both keys on your server and out of source control.
+  </Step>
+  <Step title="Create your agent">
+    Save this as `agent.ts`:
+
+    ```typescript agent.ts highlight={10}
+    import { agentmuxer } from "@agentmuxer/sdk/openai";
+    import { Agent, run } from "@openai/agents";
+
+    const prompt = `Use AgentMuxer to research the latest TypeScript release.
+    Summarize three changes with sources and report the tool cost.
+    Spend at most $0.10 on one tool call. Stop if it costs more.`;
+
+    const agent = new Agent({
+      name: "Research assistant",
+      tools: [agentmuxer()],
+    });
+    const result = await run(agent, prompt);
+    console.log(result.finalOutput);
+    ```
+  </Step>
+  <Step title="Run">
+    ```bash
+    node agent.ts
+    ```
+
+    The example asks the agent to print:
+
+    - Three TypeScript release changes.
+    - Sources for the summary.
+    - The actual tool cost, or the reason it could not complete the purchase.
+
+    To try another task, edit `prompt`. Include the spending you allow.
+  </Step>
+</Steps>
+
+## Customize permissions
+
+`agentmuxer()` exposes all AgentMuxer tools, including purchases. OpenAI tool approval defaults to `requireApproval: "never"`; AgentMuxer's spending and payment-confirmation controls still apply.
+
+Pass `allowedTools` to filter exposed tools. For OpenAI approval prompts, pass `requireApproval: "always"` and implement [approval interruptions and resumption](https://openai.github.io/openai-agents-js/guides/human-in-the-loop/).
+
+OpenAI receives the application key and connects to AgentMuxer on your behalf. See the [SDK reference](/reference/sdk) for all options.
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" icon="key" href="/sdk/applications">
+    Manage credentials and spending limits.
+  </Card>
+  <Card title="Run in production" icon="server" href="/sdk/production">
+    Handle deployment, failures, and tracing.
+  </Card>
+</CardGroup>

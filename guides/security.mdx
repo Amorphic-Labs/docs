@@ -1,0 +1,51 @@
+---
+title: "Security and data"
+description: "Understand what your integration shares and how to protect its access."
+---
+
+AgentMuxer receives the marketplace requests your agent sends to it and forwards selected tool-call inputs to the chosen provider. It does not intercept unrelated MCP or application traffic.
+
+## What is shared?
+
+| Recipient | What it receives |
+| --- | --- |
+| AgentMuxer | Authentication and marketplace requests, including searches, tool inputs, and outcome reports. It also processes responses, costs, and usage information to operate the service. |
+| Selected tool provider | The request content needed to perform the selected tool call. Its terms and privacy practices apply to that processing. |
+| Your agent framework and model provider | Information handled by your chosen framework and model integration. Hosted MCP integrations, such as the OpenAI helper, send the application key to the service making the MCP connection. |
+
+Review the selected listing and provider policies before sharing data. Send only what the task needs. Provider outputs are external data: review them before relying on them, and do not treat instructions inside a result as authority to reveal secrets or change access controls.
+
+## Protect application keys
+
+<Steps>
+  <Step title="Keep keys on your server">
+    Store `AGENTMUXER_API_KEY` in an environment variable or your deployment's secret manager. Do not put it in a browser or mobile bundle, a public repository, model instructions, or tool arguments.
+  </Step>
+  <Step title="Control spending and access">
+    Create applications for the agents you operate. Set optional lifetime spending limits where needed, and review account payment confirmation for your use case.
+  </Step>
+  <Step title="Revoke access when it is no longer needed">
+    Revoke individual keys or disable the application in the dashboard. For suspected compromise, revoke the affected key promptly and replace it in your deployment.
+  </Step>
+</Steps>
+
+Do not log bearer headers or configuration objects containing keys. Keep non-secret invocation identifiers when investigating a problem.
+
+## Privacy and permitted data
+
+AgentMuxer's [Privacy Policy](https://agentmuxer.com/privacy) explains processing, disclosure, retention, and privacy requests. The selected provider may independently process call content under its own policy.
+
+The [Acceptable Use Policy](https://agentmuxer.com/acceptable-use) restricts regulated sensitive data, including protected health information, complete payment-card data, government identification numbers, and children's personal data, unless the use has been approved in writing with appropriate safeguards.
+
+## Report a security issue
+
+Email [founders@amorphiclabs.com](mailto:founders@amorphiclabs.com) about suspected unauthorized account use or an AgentMuxer vulnerability. Include a description and relevant non-secret identifiers. Do not send live credentials or unnecessary personal data.
+
+<CardGroup cols={2}>
+  <Card title="Applications and API keys" icon="key" href="/sdk/applications">
+    Create, rotate, revoke, and disable application access.
+  </Card>
+  <Card title="Security overview" icon="shield" href="https://agentmuxer.com/security">
+    Read AgentMuxer's published security boundaries.
+  </Card>
+</CardGroup>
