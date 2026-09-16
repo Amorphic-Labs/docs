@@ -31,7 +31,51 @@
           "href": "https://www.npmjs.com/package/@agentmuxer/sdk"
         }
       ]
-    }
+    },
+    "tabs": [
+      {
+        "tab": "SDK",
+        "pages": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": []
+          },
+          {
+            "group": "Your application",
+            "pages": []
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Use AgentMuxer",
+            "pages": []
+          },
+          {
+            "group": "Account and trust",
+            "pages": []
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Reference",
+            "pages": []
+          }
+        ]
+      }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
