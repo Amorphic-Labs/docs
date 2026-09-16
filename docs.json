@@ -45,11 +45,19 @@
           },
           {
             "group": "Integrations",
-            "pages": []
+            "pages": [
+              "sdk/openai",
+              "sdk/claude-agent",
+              "sdk/ai-sdk",
+              "sdk/native-mcp"
+            ]
           },
           {
             "group": "Your application",
-            "pages": []
+            "pages": [
+              "sdk/applications",
+              "sdk/production"
+            ]
           }
         ]
       },
@@ -58,11 +66,18 @@
         "groups": [
           {
             "group": "Use AgentMuxer",
-            "pages": []
+            "pages": [
+              "guides/how-it-works",
+              "guides/connect",
+              "guides/use-tools"
+            ]
           },
           {
             "group": "Account and trust",
-            "pages": []
+            "pages": [
+              "guides/security",
+              "guides/billing"
+            ]
           }
         ]
       },
@@ -71,7 +86,13 @@
         "groups": [
           {
             "group": "Reference",
-            "pages": []
+            "pages": [
+              "reference/sdk",
+              "reference/mcp",
+              "reference/compatibility",
+              "reference/troubleshooting",
+              "changelog"
+            ]
           }
         ]
       }
@@ -84,6 +105,10 @@
   },
   "navbar": {
     "links": [
+      {
+        "href": "/changelog",
+        "label": "Changelog"
+      },
       {
         "label": "Support",
         "href": "mailto:founders@amorphiclabs.com"
@@ -114,7 +139,7 @@
       "linkedin": "https://linkedin.com/company/amorphic-labs"
     }
   },
-  "description": "The next billion software users are AI agents, yet agents still can't act on their own: every paid tool they need runs through a human making accounts, managing API keys, and guessing which provider is best. We are the capability marketplace built for agents: one MCP and one balance through which agents find, pay for, and use APIs, data, skills, other agents, and software at runtime, with every request routed to the best provider based on benchmarks from real tasks and outcome feedback from the agents themselves.",
+  "description": "Give your agents one connection to discover and use tools. Build with the AgentMuxer SDK or connect your existing agent.",
   "appearance": {
     "default": "system"
   },

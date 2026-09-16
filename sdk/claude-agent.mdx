@@ -1,0 +1,123 @@
+---
+title: "Claude Agent SDK"
+description: "Connect AgentMuxer to Claude Agent SDK and run an agent that can discover and purchase tools."
+---
+
+Give your agent tools to discover capabilities, inspect their prices, purchase a tool call, and use the result. Your application's owner pays for AgentMuxer purchases; model-provider charges are separate.
+
+## Add to an existing agent
+
+Register AgentMuxer in your existing `query()` options:
+
+```typescript
+import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
+
+const options = {
+  mcpServers: { agentmuxer: agentmuxer() },
+  allowedTools: ["mcp__agentmuxer__*"],
+};
+```
+
+`allowedTools` lets Claude call AgentMuxer tools without a separate Claude permission prompt.
+
+## Run your first agent
+
+Use Node.js 22.18 or later with ESM. You need an [AgentMuxer application key](/sdk/applications), a funded AgentMuxer account for paid calls, and a model-provider key.
+
+<Steps>
+  <Step title="Create a project">
+    ```bash
+    mkdir my-agent
+    cd my-agent
+    npm init -y
+    npm pkg set type=module
+    npm install @agentmuxer/sdk @anthropic-ai/claude-agent-sdk
+    ```
+  </Step>
+  <Step title="Set your keys">
+    Export these variables in the terminal where you will run the agent:
+
+    ```bash
+    export AGENTMUXER_API_KEY='your-application-key'
+    export ANTHROPIC_API_KEY='your-model-provider-key'
+    ```
+
+    AgentMuxer uses your application key directly. No OAuth login is required. Keep both keys on your server and out of source control.
+  </Step>
+  <Step title="Create your agent">
+    Save this complete example as `agent.ts`:
+
+    ```typescript agent.ts
+    import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
+    import { query } from "@anthropic-ai/claude-agent-sdk";
+    
+    for await (const message of query({
+      prompt:
+        process.argv[2] ??
+        "Use AgentMuxer to research the latest TypeScript release and summarize three changes with sources. You may buy one tool call up to $0.10 (maxCostMicros: 100000). Do not accept higher-priced terms. Report the actual tool cost or explain any refusal.",
+      options: {
+        mcpServers: { agentmuxer: agentmuxer() },
+        allowedTools: ["mcp__agentmuxer__*"],
+      },
+    })) {
+      if (message.type !== "result") {
+        continue;
+      }
+      if (message.subtype !== "success") {
+        throw new Error(message.errors.join("\n"));
+      }
+      if (message.is_error) {
+        throw new Error(message.result);
+      }
+      console.log(message.result);
+    }
+    ```
+  </Step>
+  <Step title="Run it">
+    ```bash
+    node agent.ts
+    ```
+
+    The task asks for a sourced summary and the actual tool cost. If no suitable tool is available within the requested budget, the agent should explain the refusal instead.
+
+    You can replace the task:
+
+    ```bash
+    node agent.ts 'Use AgentMuxer to research PostgreSQL 18. You may buy one tool call up to $0.05 (maxCostMicros: 50000). Do not accept higher-priced terms. Print a sourced summary and the actual tool cost.'
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  The default prompt authorizes one purchase up to $0.10. Prompt instructions guide the model; they are not a hard cumulative spending cap. Set an [application spending limit](/sdk/applications) for a server-enforced cap. Each run may make a new purchase.
+</Note>
+
+## Permissions and payment confirmation
+
+Claude's tool permissions and AgentMuxer's payment confirmation are separate. `allowedTools` preapproves the AgentMuxer tools in Claude; it does not bypass spending limits or human payment confirmation.
+
+If the run returns `approval_required`, follow [billing and approvals](/guides/billing). Changing the account's payment-confirmation setting affects personal agents and applications. The helper never changes it for you.
+
+## Customize the integration
+
+| Control | Where to configure it |
+| --- | --- |
+| Application key | `agentmuxer({ apiKey })`, or `AGENTMUXER_API_KEY` |
+| MCP timeout and loading | `agentmuxer({ timeout, alwaysLoad })` |
+| Per-tool policies | The helper's native `tools` option |
+| Claude permission decisions | `allowedTools`, `disallowedTools`, or `canUseTool` in `query()` options |
+| Model and run limits | Your Claude SDK options |
+| Cumulative tool spending | Your AgentMuxer application's spending limit |
+
+The helper's `tools` option sets per-tool policies; it is not a tool allowlist. Claude's `allowedTools` also does not hide tools that are absent from the list.
+
+Run this integration in an environment supported by the Claude Agent SDK, including its process requirements. See [Claude's deployment guidance](https://platform.claude.com/docs/en/agent-sdk/hosting), the [SDK reference](/reference/sdk), and [compatibility](/reference/compatibility).
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" icon="key" href="/sdk/applications">
+    Manage credentials, spending limits, and application access.
+  </Card>
+  <Card title="Run in production" icon="server" href="/sdk/production">
+    Handle connection lifecycle, failures, and tracing.
+  </Card>
+</CardGroup>

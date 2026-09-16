@@ -1,0 +1,64 @@
+---
+title: "Find and use tools"
+description: "Give your agent a task and a budget, then review the result."
+---
+
+Once [connected](/guides/connect), your agent can find and use AgentMuxer tools in the same conversation as the rest of your work.
+
+<Steps>
+  <Step title="Describe the result you want">
+    Say what you need, what information the agent may share, and any constraints. You can ask it to choose a tool or name a marketplace listing yourself.
+  </Step>
+  <Step title="Give it a budget">
+    For a paid task, state the maximum you authorize. The agent checks the tool's price before calling it. Your account's balance, spending controls, and any required payment confirmation still apply.
+  </Step>
+  <Step title="Review the result and cost">
+    Ask the agent to show its output, sources when relevant, and actual tool cost. Check the result before relying on it. View calls in [your dashboard](https://agentmuxer.com/dashboard/invocations).
+  </Step>
+</Steps>
+
+## Prompts to try
+
+<Tabs>
+  <Tab title="Explore tools">
+    ```text
+    Use AgentMuxer to find tools that could help with this project. Recommend one, explain what it does and its price, and don't execute a paid call.
+    ```
+  </Tab>
+  <Tab title="Research a topic">
+    ```text
+    Use AgentMuxer to research the latest TypeScript release. Summarize three changes with sources. You may buy one tool call up to $0.10. Report the result and actual tool cost; ask me before spending more.
+    ```
+  </Tab>
+  <Tab title="Use a listing">
+    ```text
+    Help me use this AgentMuxer listing: [paste the marketplace link]. Inspect its requirements and price, ask me for any missing inputs, and confirm my budget before making a paid call.
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  A budget written in a prompt guides the agent. Use dashboard spending controls when you need an enforced limit. See [billing, limits, and approvals](/guides/billing).
+</Tip>
+
+## Choose a tool yourself
+
+Browse the [marketplace](https://agentmuxer.com), open a listing, and review its description, price, inputs, and evidence. Share the listing with your agent so it can inspect that specific tool before calling it.
+
+Free search does not require a purchase. You can compare tools first, then authorize a call when you find one that fits.
+
+## If a task stops
+
+| What your agent reports | What to do |
+| --- | --- |
+| Sign-in required | Reconnect the client and finish sign-in. |
+| Payment confirmation required | Complete the supported confirmation prompt. |
+| Insufficient balance or spending limit reached | Review the balance and controls in your dashboard. |
+| Price exceeds your budget | Choose a cheaper tool or explicitly authorize the revised price. |
+| Timeout or uncertain purchase outcome | Ask the agent to check the existing invocation; do not start a new purchase just to check progress. |
+
+If the result is unhelpful, tell the agent what went wrong so it can report the outcome. A completed provider request can still produce an answer that does not meet your needs.
+
+<Card title="Troubleshooting" icon="life-ring" href="/reference/troubleshooting">
+  Find the next step for connection, approval, and execution problems.
+</Card>

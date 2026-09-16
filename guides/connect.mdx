@@ -1,0 +1,120 @@
+---
+title: "Connect your agent"
+description: "Set up AgentMuxer, sign in, and start a new conversation."
+---
+
+For Codex, Claude Code, and OpenCode, paste this prompt into your agent:
+
+```text
+Set up AgentMuxer using its recommended installer, including its persistent free-search guidance. Read and follow https://agentmuxer.com/llms.txt
+```
+
+<Steps>
+  <Step title="Install">
+    Your agent runs the recommended installer. It connects supported installed clients to AgentMuxer and adds guidance to search the marketplace when a task needs an external capability.
+
+    To run setup yourself in a terminal with Node.js and npm:
+
+    ```sh
+    npx -y @agentmuxer/setup@latest install
+    ```
+
+    To set up just one client, add `--client codex`, `--client claude-code`, or `--client opencode`.
+  </Step>
+  <Step title="Sign in">
+    On first installation, setup starts your client's browser sign-in. Complete the prompts for each client you connect. Sign-in is required for free and paid use.
+
+    Existing credentials are preserved. If setup prints a reconnect command, run that command and finish sign-in.
+  </Step>
+  <Step title="Restart and try it">
+    Restart open coding-agent clients to load the connection, then paste this into a new conversation:
+
+    ```text
+    Use AgentMuxer to find tools that could help with this project. Recommend one, explain what it does and its price, and don't execute a paid call.
+    ```
+
+    This first prompt explores the catalog without buying a tool call. Next, [give your agent a task](/guides/use-tools).
+  </Step>
+</Steps>
+
+## Other clients and manual setup
+
+The installer also adds reusable discovery guidance. Manual MCP registration only adds the connection.
+
+<Tabs>
+  <Tab title="ChatGPT or Claude">
+    In your platform's connector settings, add a custom remote MCP connection using this URL, then complete sign-in:
+
+    ```text
+    https://mcp.agentmuxer.com/mcp
+    ```
+
+    Start a new conversation after connecting. Custom connector availability depends on your platform and plan.
+  </Tab>
+  <Tab title="Codex">
+    Run both commands, complete browser sign-in, and restart open Codex sessions:
+
+    ```sh
+    codex mcp add agentmuxer --url https://mcp.agentmuxer.com/mcp
+    codex mcp login agentmuxer
+    ```
+  </Tab>
+  <Tab title="Claude Code">
+    Run both commands, complete browser sign-in, and restart open Claude Code sessions:
+
+    ```sh
+    claude mcp add agentmuxer --transport http https://mcp.agentmuxer.com/mcp
+    claude mcp login agentmuxer
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Add this to `.cursor/mcp.json`, preserving any existing servers. Complete sign-in when Cursor connects.
+
+    ```json
+    {
+      "mcpServers": {
+        "agentmuxer": { "url": "https://mcp.agentmuxer.com/mcp" }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="VS Code">
+    Add this to `.vscode/mcp.json`, preserving any existing servers. Complete sign-in when VS Code connects.
+
+    ```json
+    {
+      "servers": {
+        "agentmuxer": {
+          "type": "http",
+          "url": "https://mcp.agentmuxer.com/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Manage the connection
+
+<AccordionGroup>
+  <Accordion title="Check setup or reconnect">
+    Run the setup status command:
+
+    ```sh
+    npx -y @agentmuxer/setup@latest status
+    ```
+
+    Follow any reconnect instruction it prints. For client errors or interrupted sign-in, see [troubleshooting](/reference/troubleshooting).
+  </Accordion>
+  <Accordion title="Remove the installer-managed connection">
+    ```sh
+    npx -y @agentmuxer/setup@latest remove
+    ```
+
+    This removes the installer-managed guidance and removes or disables its connection. Restart open clients afterward. For a manually added connector, remove it in the client's settings.
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  Building and distributing your own agent? Use an [application API key](/sdk/applications) with the SDK. That flow does not require browser sign-in for each run.
+</Info>

@@ -1,0 +1,61 @@
+---
+title: "Troubleshooting"
+description: "Recover from connection, purchase, and execution problems."
+---
+
+Start with the symptom you see. For a blocked purchase, read the returned reason before trying again.
+
+<AccordionGroup>
+  <Accordion title="My agent cannot see AgentMuxer">
+    Restart an open coding-agent session after installation. In a hosted chat client, start a new conversation and enable the connection. Check the client's MCP connection settings.
+
+    For an SDK application, confirm that you added the helper to the correct framework option. Follow your [integration guide](/quickstart).
+  </Accordion>
+  <Accordion title="Sign-in was interrupted or authentication was rejected">
+    For personal agents, complete the client-specific sign-in step in [Connect your agent](/guides/connect).
+
+    For SDK applications, check that `AGENTMUXER_API_KEY` is available to the server process, has no surrounding whitespace, and has not been revoked. Check that the application is enabled. API keys do not need OAuth.
+  </Accordion>
+  <Accordion title="The agent has tools but does not use them">
+    Give it a concrete task and explicitly ask it to use AgentMuxer. Check framework tool filters and permissions. Make sure the agent loop allows multiple tool calls: discovery, inspection, and execution are separate steps.
+  </Accordion>
+  <Accordion title="A purchase needs confirmation">
+    Follow the approval prompt in a client that supports it. Framework approval and AgentMuxer payment confirmation are separate.
+
+    For unattended applications, review [payment confirmation](/guides/billing). The account setting also affects personal agents. Changing a framework allowlist alone does not remove AgentMuxer's confirmation requirement.
+  </Accordion>
+  <Accordion title="There is not enough balance, or a spending cap was reached">
+    Open the returned top-up link or your [dashboard](https://app.agentmuxer.com/dashboard). Review the account balance and application spending limit.
+
+    An application cap is a lifetime limit, not a monthly allowance. Creating another key for the same application does not reset its usage.
+  </Accordion>
+  <Accordion title="A tool is unavailable or rejects its input">
+    Search again if the listing is unavailable. Inspect the selected tool's current interface and match its parameter names, types, and required fields. Correct the input before retrying a deterministic error.
+  </Accordion>
+  <Accordion title="A request timed out or the connection dropped">
+    A client timeout does not prove that a purchase failed. Check the existing call in your dashboard and retain its invocation ID and original idempotency key.
+
+    Do not issue a replacement purchase with a new key just because you did not receive the response. For a retry of the same logical purchase, preserve the original arguments and key. See [purchase retries](/reference/mcp#purchases-and-retries).
+  </Accordion>
+  <Accordion title="A stream ends before the tool finishes">
+    With Vercel AI SDK, keep the MCP connection open until the stream is consumed. A web handler must arrange cleanup for stream completion, error, and cancellation. See the [Vercel guide](/sdk/ai-sdk).
+  </Accordion>
+  <Accordion title="The tool returned a result, but it was not useful">
+    Review the response and sources before relying on them. A successful provider response does not guarantee that it answers your task.
+
+    Ask the agent to report `not-useful` through `report_outcome`. Reporting feedback does not itself refund a purchase. Contact support if you need help investigating a charge.
+  </Accordion>
+</AccordionGroup>
+
+## Contact support
+
+Email [founders@amorphiclabs.com](mailto:founders@amorphiclabs.com) with:
+
+- What you expected and what happened.
+- Your agent client or SDK/framework versions.
+- The request or invocation ID, if available.
+- A minimal reproduction with secrets removed.
+
+<Warning>
+Do not send API keys, bearer headers, or private tool inputs in a public issue.
+</Warning>

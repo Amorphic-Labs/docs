@@ -1,0 +1,117 @@
+---
+title: "Other frameworks and native MCP"
+description: "Connect through your framework’s existing remote MCP support."
+---
+
+If your framework already supports remote MCP, you can connect directly without installing `@agentmuxer/sdk`.
+
+| Setting | Value |
+| --- | --- |
+| Endpoint | `https://mcp.agentmuxer.com/mcp` |
+| Transport | Streamable HTTP |
+| Authentication | `Authorization: Bearer <application-key>` |
+| Credentials | An [AgentMuxer application key](/sdk/applications); no OAuth login |
+
+<Note>
+  These are connection recipes for an existing agent, not standalone quickstarts or a guarantee of full framework compatibility. For supported SDK integrations and runtime requirements, see [compatibility](/reference/compatibility).
+</Note>
+
+## Configure your framework
+
+Read `AGENTMUXER_API_KEY` from your server's environment and reject startup if it is missing:
+
+```typescript
+const apiKey = process.env.AGENTMUXER_API_KEY;
+if (!apiKey) throw new Error("Set AGENTMUXER_API_KEY");
+```
+
+<Tabs>
+  <Tab title="OpenAI Responses">
+    Add this item to the Responses API's `tools` array:
+
+    ```typescript
+    {
+      type: "mcp",
+      server_label: "agentmuxer",
+      server_url: "https://mcp.agentmuxer.com/mcp",
+      authorization: apiKey,
+      require_approval: "never",
+    }
+    ```
+
+    OpenAI receives the application key and connects to AgentMuxer. `require_approval` controls OpenAI's approval step; AgentMuxer's payment policy still applies. See [OpenAI remote MCP](https://developers.openai.com/api/docs/guides/tools-remote-mcp).
+  </Tab>
+  <Tab title="Anthropic Messages">
+    Add these fields to a beta Messages request:
+
+    ```typescript
+    {
+      betas: ["mcp-client-2025-11-20"],
+      mcp_servers: [{
+        type: "url",
+        name: "agentmuxer",
+        url: "https://mcp.agentmuxer.com/mcp",
+        authorization_token: apiKey,
+      }],
+      tools: [{
+        type: "mcp_toolset",
+        mcp_server_name: "agentmuxer",
+      }],
+    }
+    ```
+
+    Anthropic receives the application key and connects to AgentMuxer. The connector is beta and supports tool calls; check its [current requirements](https://platform.claude.com/docs/en/agents-and-tools/mcp-connector) before deploying.
+  </Tab>
+  <Tab title="Mastra">
+    Install `@mastra/mcp`, then configure its client:
+
+    ```typescript
+    import { MCPClient } from "@mastra/mcp";
+
+    const client = new MCPClient({
+      servers: {
+        agentmuxer: {
+          url: new URL("https://mcp.agentmuxer.com/mcp"),
+          requestInit: {
+            headers: { Authorization: `Bearer ${apiKey}` },
+          },
+        },
+      },
+    });
+    ```
+
+    Pass `await client.listTools()` to your agent's tools configuration. Call `await client.disconnect()` when the run finishes, including on errors. See [Mastra MCP](https://mastra.ai/docs/connections/mcp).
+  </Tab>
+  <Tab title="LangChain / LangGraph">
+    Install `@langchain/mcp-adapters`, then configure its client:
+
+    ```typescript
+    import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+
+    const client = new MultiServerMCPClient({
+      agentmuxer: {
+        transport: "http",
+        url: "https://mcp.agentmuxer.com/mcp",
+        headers: { Authorization: `Bearer ${apiKey}` },
+      },
+    });
+    ```
+
+    Pass `await client.getTools()` to your agent's tools configuration. Release the client when the run ends using the lifecycle API for your installed version. See [LangChain MCP](https://docs.langchain.com/oss/javascript/langchain/mcp).
+  </Tab>
+</Tabs>
+
+## Permissions and spending
+
+These connections expose AgentMuxer's tools, including purchases. Your framework owns model configuration, tool selection, permissions, and connection lifecycle. AgentMuxer enforces the account balance, application spending limit, and payment-confirmation policy.
+
+Before using a headless workflow, confirm that it can handle your account's [payment approval requirements](/guides/billing). Model-provider charges are separate. Keep application keys out of browser bundles, prompts, tool arguments, and logs.
+
+<CardGroup cols={2}>
+  <Card title="Use an SDK helper" icon="code" href="/reference/sdk">
+    See the OpenAI, Claude, and Vercel integration options.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/reference/troubleshooting">
+    Resolve authentication, tool, and purchase errors.
+  </Card>
+</CardGroup>

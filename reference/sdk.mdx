@@ -1,0 +1,88 @@
+---
+title: "SDK reference"
+description: "Import paths, options, and return values for @agentmuxer/sdk."
+---
+
+The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY` unless you pass `apiKey`. All connect to `https://mcp.agentmuxer.com/mcp`.
+
+<ParamField body="apiKey" type="string">
+  Your application key, supplied from a server-side secret store. Omit it to use `AGENTMUXER_API_KEY`. Empty values, surrounding whitespace, and non-printable characters are rejected. Browser use is rejected.
+</ParamField>
+
+<Tabs>
+  <Tab title="OpenAI Agents">
+    ```ts
+    import { agentmuxer } from "@agentmuxer/sdk/openai";
+
+    const tool = agentmuxer({ requireApproval: "never" });
+    ```
+
+    Returns the framework's hosted MCP tool configuration. Add it to `tools` on an OpenAI agent. OpenAI receives the application key and connects to AgentMuxer.
+
+    <ParamField body="allowedTools" type="native OpenAI tool filter">
+      Optional. Uses the `allowedTools` type from your installed `@openai/agents` version. Omit it to expose all AgentMuxer tools, including purchases.
+    </ParamField>
+    <ParamField body="requireApproval" type='"always" | "never"' default="never">
+      OpenAI tool approval policy. With `"always"`, handle approval interruptions and resume the run using OpenAI's API. AgentMuxer payment confirmation and spending limits still apply.
+    </ParamField>
+
+    [Runnable OpenAI example](/sdk/openai) · [OpenAI MCP options](https://openai.github.io/openai-agents-js/guides/mcp/)
+  </Tab>
+  <Tab title="Claude Agent SDK">
+    ```ts
+    import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
+
+    const server = agentmuxer();
+    // Pass under options.mcpServers.agentmuxer.
+    ```
+
+    Returns an HTTP MCP server configuration with bearer authentication.
+
+    <ParamField body="tools" type="native Claude per-tool policies">
+      Optional permission policies. This option is not an allowlist that hides every unlisted tool.
+    </ParamField>
+    <ParamField body="timeout" type="number">
+      Optional native MCP server timeout. The helper does not override the framework default.
+    </ParamField>
+    <ParamField body="alwaysLoad" type="boolean">
+      Optional native tool-loading behavior. The helper preserves the framework default.
+    </ParamField>
+
+    Configure `allowedTools`, `disallowedTools`, and `canUseTool` on your Claude agent, not on this helper. Preapproving a framework tool does not bypass AgentMuxer's payment policy.
+
+    [Runnable Claude example](/sdk/claude-agent) · [Claude MCP guide](https://platform.claude.com/docs/en/agent-sdk/mcp)
+  </Tab>
+  <Tab title="Vercel AI SDK">
+    ```ts
+    import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
+
+    const mux = await agentmuxer();
+    // Pass mux.tools to your agent; await mux.close() after it finishes.
+    ```
+
+    Returns a promise for a connection. Automatic MCP retries are disabled.
+
+    <ParamField body="initializationOptions" type="native MCP initialization options">
+      Optional initialization and cancellation options accepted by `@ai-sdk/mcp`.
+    </ParamField>
+    <ParamField body="onUncaughtError" type="native MCP error callback">
+      Optional callback for uncaught MCP client errors. Avoid logging credentials.
+    </ParamField>
+    <ResponseField name="tools" type="tool set">
+      The discovered AgentMuxer tools, including purchases. Pass to your agent's `tools`.
+    </ResponseField>
+    <ResponseField name="close" type="() => Promise<void>">
+      Release the connection after the complete result or stream is consumed. Call in `finally`; HTTP streams also need cleanup on completion, error, and cancellation.
+    </ResponseField>
+
+    [Runnable Vercel example](/sdk/ai-sdk) · [Vercel MCP guide](https://ai-sdk.dev/docs/ai-sdk-core/mcp-tools)
+  </Tab>
+</Tabs>
+
+## Controls outside the helper
+
+Choose models, prompts, turn limits, and framework permissions in your agent framework. Configure balance, application spending limits, and account payment confirmation in AgentMuxer.
+
+The helpers do not add an SDK-wide dollar budget, change your account settings, or supply model-provider credentials.
+
+<Card title="Billing, limits, and approvals" href="/guides/billing">Understand which controls enforce spending and which guide agent behavior.</Card>

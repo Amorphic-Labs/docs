@@ -1,0 +1,73 @@
+---
+title: "Billing, limits, and approvals"
+description: "Understand who pays, how spending limits work, and when a purchase needs confirmation."
+---
+
+AgentMuxer tool purchases use your account's credit balance. Model-provider charges are separate: AgentMuxer spending limits do not cap your OpenAI, Anthropic, or other model usage.
+
+## Who pays?
+
+<Tabs>
+  <Tab title="Personal agents">
+    When you connect an agent and sign in, its AgentMuxer purchases use your account's balance. Manage connected-agent controls in your dashboard.
+  </Tab>
+  <Tab title="Applications">
+    You, the builder, pay for calls made with your application keys. Your application's users do not need their own AgentMuxer account for this integration. All keys for one application share its spending history and optional lifetime limit.
+  </Tab>
+</Tabs>
+
+## Balance and spending limits
+
+| Control | What it means |
+| --- | --- |
+| Account balance | Credits available for paid AgentMuxer calls. |
+| Application lifetime spending limit | An optional cumulative cap shared by all keys for that application. It does not reset monthly. |
+| Per-call maximum price | The maximum authorized for an individual tool purchase. |
+| Prompt budget | Instructions to the model; it is not an enforced cumulative limit. |
+
+**Applications default to no limit.** Without an application limit, the application can spend your available account balance, subject to other account controls. No limit does not mean free execution.
+
+For example, an application with a $10 lifetime limit and $3 already spent has at most $7 left, before accounting for calls on hold. Adding credits or rotating a key does not reset that application's spending.
+
+In **Applications → Manage**, enter a positive limit or leave it blank for no limit. A new limit must cover money already spent and calls on hold. When a proposed purchase would exceed the available limit, AgentMuxer refuses it; you can increase the limit or remove it in the dashboard.
+
+## Tool permission and payment confirmation
+
+These controls answer different questions:
+
+<CardGroup cols={2}>
+  <Card title="Framework tool permission" icon="code">
+    May this agent call the tool? Configure this in your agent framework, such as OpenAI approvals or Claude's tool permissions.
+  </Card>
+  <Card title="AgentMuxer payment confirmation" icon="credit-card">
+    Does a paid purchase need a person to confirm it? Configure this in your account's **Overview**.
+  </Card>
+</CardGroup>
+
+Approving a tool in your framework does not override AgentMuxer's balance, spending limits, or payment-confirmation setting. The SDK does not change these account settings.
+
+### Unattended applications
+
+If your account requires human payment confirmation, a headless application may stop with an approval request instead of completing a paid call. Use an integration that supports that confirmation flow, or turn off payment confirmation in [Overview](https://agentmuxer.com/dashboard) when you want unattended purchases.
+
+<Note>
+  Payment confirmation is an account-wide setting. Changing it affects both application keys and your personal-agent connections. Application spending limits remain enforced.
+</Note>
+
+Check [compatibility](/reference/compatibility) for the confirmation capabilities of your integration.
+
+## Charges and uncertain outcomes
+
+Free catalog search does not spend credits. Paid calls are charged under the provider's successful-response billability rule; failed calls are not charged. A successful response means the provider completed the request, not that the answer is necessarily correct or useful for your task.
+
+An idempotent replay returns the existing purchase outcome without another execution or charge. Keep the original idempotency key and request when retrying a purchase.
+
+<Warning>
+  A timeout in your agent does not prove that the provider call failed or that no purchase occurred. Check the existing invocation or retry with the original key; a new key can create a new purchase.
+</Warning>
+
+## Review usage
+
+Open [Applications](https://agentmuxer.com/dashboard/applications) to see **Spent** and **On hold**, then select **History** for that application's calls. Your dashboard also shows account usage and credit controls.
+
+For purchase terms, fees, and refunds, see the [Terms of Service](https://agentmuxer.com/terms). For an unexpected charge, [contact support](mailto:founders@amorphiclabs.com) with the invocation ID, without API keys.

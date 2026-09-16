@@ -1,47 +1,60 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "SDK quickstart"
+description: "Choose your framework and run an agent with AgentMuxer tools."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+The TypeScript SDK connects your existing agent to AgentMuxer. It exposes tools for discovery, inspection, purchases, and outcome reporting.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+## Choose your framework
 
-## Prerequisites
+Each guide includes installation, credentials, a complete runnable agent, and a command to run it.
 
-Before you begin, you must have:
+<CardGroup cols={3}>
+  <Card title="OpenAI Agents" icon="code" href="/sdk/openai">
+    Add a hosted MCP tool to your agent's tools.
+  </Card>
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
+  <Card title="Claude Agent SDK" icon="terminal" href="/sdk/claude-agent">
+    Add AgentMuxer to your MCP server configuration.
+  </Card>
 
-## Get started
+  <Card title="Vercel AI SDK" icon="bolt" href="/sdk/ai-sdk">
+    Load AgentMuxer tools into a ToolLoopAgent.
+  </Card>
+</CardGroup>
+
+## Before you start
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Use a supported runtime">
+    Use Node.js 22.18 or later with ESM. See [compatibility](/reference/compatibility) for the tested runtimes and framework versions.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
-
-    ```bash
-    your-cli init
-    ```
+  <Step title="Create an application key">
+    Open [Applications](https://app.agentmuxer.com/dashboard/applications), create an application, and save its key as `AGENTMUXER_API_KEY` on your server. Application keys authenticate without an OAuth sign-in.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
-
-    ```bash
-    your-cli start
-    ```
+  <Step title="Prepare for the example purchase">
+    Add credits in your [dashboard](https://app.agentmuxer.com/dashboard). The quickstarts ask the agent to buy one tool call up to \$0.10. Your model provider bills separately.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+<Note>
+  A prompt's budget guides the agent. Set an optional application spending cap in the dashboard when you need a server-enforced cumulative limit. Applications default to no limit. See [billing and approvals](/guides/billing) before running unattended agents.
+</Note>
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+## Already using another framework?
+
+Use the [native MCP connection](/sdk/native-mcp) if your framework accepts a remote MCP server. You do not need to replace your agent framework or install an AgentMuxer helper for every client.
+
+## What happens next?
+
+Your agent searches for a relevant capability, inspects it, and calls it if the task and spending controls allow. The example prints the agent's answer; ask it to include sources and actual tool cost. If a purchase is blocked, follow the returned next action rather than repeatedly running the example.
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" href="/sdk/applications">
+    Manage credentials and application usage.
+  </Card>
+
+  <Card title="Run in production" href="/sdk/production">
+    Handle deployment, connection cleanup, and uncertain outcomes.
+  </Card>
+</CardGroup>

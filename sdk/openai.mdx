@@ -1,0 +1,111 @@
+---
+title: "OpenAI Agents"
+description: "Connect AgentMuxer to OpenAI Agents and run an agent that can discover and purchase tools."
+---
+
+Give your agent tools to discover capabilities, inspect their prices, purchase a tool call, and use the result. Your application's owner pays for AgentMuxer purchases; model-provider charges are separate.
+
+## Add to an existing agent
+
+Import the helper and add it to your agent's `tools`:
+
+```typescript
+import { agentmuxer } from "@agentmuxer/sdk/openai";
+import { Agent } from "@openai/agents";
+
+const agent = new Agent({
+  name: "Research assistant",
+  tools: [agentmuxer()],
+});
+```
+
+## Run your first agent
+
+Use Node.js 22.18 or later with ESM. You need an [AgentMuxer application key](/sdk/applications), a funded AgentMuxer account for paid calls, and a model-provider key.
+
+<Steps>
+  <Step title="Create a project">
+    ```bash
+    mkdir my-agent
+    cd my-agent
+    npm init -y
+    npm pkg set type=module
+    npm install @agentmuxer/sdk @openai/agents
+    ```
+  </Step>
+  <Step title="Set your keys">
+    Export these variables in the terminal where you will run the agent:
+
+    ```bash
+    export AGENTMUXER_API_KEY='your-application-key'
+    export OPENAI_API_KEY='your-model-provider-key'
+    ```
+
+    AgentMuxer uses your application key directly. No OAuth login is required. Keep both keys on your server and out of source control.
+  </Step>
+  <Step title="Create your agent">
+    Save this complete example as `agent.ts`:
+
+    ```typescript agent.ts
+    import { agentmuxer } from "@agentmuxer/sdk/openai";
+    import { Agent, run } from "@openai/agents";
+    
+    const agent = new Agent({
+      name: "Research assistant",
+      tools: [agentmuxer()],
+    });
+    const result = await run(
+      agent,
+      process.argv[2] ??
+        "Use AgentMuxer to research the latest TypeScript release and summarize three changes with sources. You may buy one tool call up to $0.10 (maxCostMicros: 100000). Do not accept higher-priced terms. Report the actual tool cost or explain any refusal.",
+    );
+    console.log(result.finalOutput);
+    ```
+  </Step>
+  <Step title="Run it">
+    ```bash
+    node agent.ts
+    ```
+
+    The task asks for a sourced summary and the actual tool cost. If no suitable tool is available within the requested budget, the agent should explain the refusal instead.
+
+    You can replace the task:
+
+    ```bash
+    node agent.ts 'Use AgentMuxer to research PostgreSQL 18. You may buy one tool call up to $0.05 (maxCostMicros: 50000). Do not accept higher-priced terms. Print a sourced summary and the actual tool cost.'
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  The default prompt authorizes one purchase up to $0.10. Prompt instructions guide the model; they are not a hard cumulative spending cap. Set an [application spending limit](/sdk/applications) for a server-enforced cap. Each run may make a new purchase.
+</Note>
+
+## Permissions and payment confirmation
+
+`agentmuxer()` exposes all AgentMuxer tools, including purchases. It defaults to OpenAI's `requireApproval: "never"`; AgentMuxer's balance, spending limits, and payment-confirmation policy still apply.
+
+If a run returns `approval_required`, follow [billing and approvals](/guides/billing) to choose a confirmation-capable client or configure unattended purchases. The helper never changes your account settings.
+
+For a separate OpenAI approval step, pass `requireApproval: "always"` and implement the framework's [interruption and resumption flow](https://openai.github.io/openai-agents-js/guides/human-in-the-loop/). Setting this option alone does not create an approval UI.
+
+## Customize the integration
+
+| Control | Where to configure it |
+| --- | --- |
+| Application key | `agentmuxer({ apiKey })`, or `AGENTMUXER_API_KEY` |
+| Exposed MCP tools | `agentmuxer({ allowedTools })` |
+| OpenAI tool approval | `agentmuxer({ requireApproval: "always" })` |
+| Model, instructions, and run limits | Your OpenAI agent and runner |
+| Cumulative tool spending | Your AgentMuxer application's spending limit |
+
+OpenAI connects to AgentMuxer on your behalf and receives the application key. See the [SDK reference](/reference/sdk) for option types and [compatibility](/reference/compatibility) for supported versions.
+
+<CardGroup cols={2}>
+  <Card title="Applications and keys" icon="key" href="/sdk/applications">
+    Manage credentials, spending limits, and application access.
+  </Card>
+  <Card title="Run in production" icon="server" href="/sdk/production">
+    Handle connection lifecycle, failures, and tracing.
+  </Card>
+</CardGroup>

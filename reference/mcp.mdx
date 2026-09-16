@@ -1,0 +1,118 @@
+---
+title: "MCP tool reference"
+description: "Discover, inspect, purchase, and report tool outcomes."
+---
+
+Connect an MCP client to `https://mcp.agentmuxer.com/mcp`. Personal clients sign in through their supported authentication flow. Applications send their API key as a bearer token. Authentication is required for free discovery as well as paid calls.
+
+The [SDK helpers](/reference/sdk) configure this connection for your framework. The examples below are MCP tool arguments, not methods exported by the SDK.
+
+## search_offerings
+
+Find available capabilities. Searching does not invoke a provider or spend credits.
+
+```json
+{
+  "query": "Search the web for recent TypeScript release notes",
+  "limit": 5
+}
+```
+
+<ParamField body="query" type="string">Optional search text, up to 500 characters. Omit it to browse.</ParamField>
+<ParamField body="limit" type="integer">Optional page size from 1 to 50.</ParamField>
+<ParamField body="cursor" type="string">An opaque cursor returned by an earlier search. Keep the same filters when paging.</ParamField>
+<ParamField body="direction" type='"after" | "before"' default="after">Page forward or backward with a cursor.</ParamField>
+
+<Accordion title="Additional filters">
+  Use arrays for `publisherIds`, `protocols`, `taskFamilies`, `tags`, `trustTiers`, `capabilityGroups`, and `useCases`. Use values from the catalog. Trust tiers are `indexed`, `verified`, and `benchmarked`; they describe available evidence, not a guarantee of useful output.
+</Accordion>
+
+Results include `items`, with each item's `offeringVersion.id`, description, availability, and price when priced. Use the returned `nextCursor` or `prevCursor` to continue.
+
+## inspect_offering
+
+Inspect the exact version selected from search before calling it.
+
+<ParamField body="offeringVersionId" type="UUID string" required>
+  The `offeringVersion.id` returned by search.
+</ParamField>
+
+Inspection returns the tool's interface and usage information. Follow its required fields, types, and input locations. The listed price is indicative; execution enforces your maximum charge.
+
+## call_offering
+
+Execute the inspected capability. Supply a new idempotency key for each new logical purchase.
+
+<ParamField body="offeringVersionId" type="UUID string" required>The exact version you inspected.</ParamField>
+<ParamField body="maxCostMicros" type="decimal string" required>
+  Maximum initially authorized charge in USD credit micros. One dollar is `"1000000"`; ten cents is `"100000"`. Use `"0"` to authorize no positive charge unless revised terms are explicitly accepted.
+</ParamField>
+<ParamField body="idempotencyKey" type="string" required>
+  A non-empty identifier up to 200 characters. Reuse it for retries of the same purchase.
+</ParamField>
+<ParamField body="request" type="object" required>
+  Provider inputs using the inspected interface. Use `{}` when the tool requires no inputs.
+</ParamField>
+<ParamField body="acceptTerms" type="UUID string">
+  Optional acceptance reference returned with revised price terms. Do not invent this value.
+</ParamField>
+
+### Request inputs
+
+| Field | Use |
+| --- | --- |
+| `path` | Named path parameters |
+| `query` | Named query parameters |
+| `headers` | Headers required by the tool's public interface |
+| `body` | Request body matching the inspected schema |
+| `cookies`, `querystring`, `contentType` | Only when specified by the interface |
+| `binaryBody` | Base64-encoded raw content as `{ base64 }` |
+| `multipartFiles` | Files grouped by field name, each with `base64`, `filename`, and optional `contentType` |
+
+Do not pass your AgentMuxer application key as a tool input. Authentication belongs on the MCP connection.
+
+### Purchases and retries
+
+<Steps>
+  <Step title="Use the price and interface you inspected">
+    Submit the exact offering version, inputs, maximum charge, and an idempotency key. Account balance, application caps, and payment confirmation still apply.
+  </Step>
+  <Step title="Handle revised terms explicitly">
+    If the response has `status: "price_confirmation_required"`, review the exact cost and expiry. To accept, repeat the original call unchanged, including its maximum and key, adding the returned `continuation.acceptTerms`. If you decline, stop. Acceptance does not override spending limits.
+  </Step>
+  <Step title="Preserve the purchase identity">
+    A replay with the same key returns the existing result without another execution or charge. A client timeout is not evidence that no purchase happened. Check the existing call rather than starting another purchase. Expired confirmation terms require a new key after you decide to start a new purchase.
+  </Step>
+</Steps>
+
+### Results
+
+<ResponseField name="response" type="object">
+  The invocation result, including the provider response and invocation identifier.
+</ResponseField>
+<ResponseField name="cost.costMicros" type="decimal string">
+  The tool cost in USD credit micros.
+</ResponseField>
+<ResponseField name="cost.chargeStatus" type='"finalized" | "pending"'>
+  Whether accounting has finalized. A pending charge is not a reason to buy the tool again.
+</ResponseField>
+<ResponseField name="cost.replayed" type="boolean">
+  Whether this is a replay of an existing purchase.
+</ResponseField>
+<ResponseField name="cost.balanceMicros" type="decimal string">
+  Account balance when present in the response.
+</ResponseField>
+
+Refusals are structured results with `refusedBy` and relevant recovery information. An insufficient-balance response can include a `topupUrl`; show it to the account owner. Follow [troubleshooting](/reference/troubleshooting) instead of blindly retrying.
+
+## report_outcome
+
+Report whether an invocation helped with the task. This feedback is separate from the provider's HTTP response and billing.
+
+<ParamField body="invocationId" type="UUID string" required>The invocation identifier returned by the call.</ParamField>
+<ParamField body="outcome" type='"succeeded" | "failed" | "not-useful"' required>Choose the result that describes the task outcome.</ParamField>
+<ParamField body="detail" type="string">Optional explanation up to 1,000 characters. Do not include secrets.</ParamField>
+
+The response reports `accepted` and `duplicate`. Repeated reports from the same account for an invocation are acknowledged without recording another report.
+
+<Card title="Billing, limits, and approvals" href="/guides/billing">See when charges apply and how framework permissions differ from payment confirmation.</Card>
