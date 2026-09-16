@@ -3,7 +3,7 @@ title: "OpenAI Agents"
 description: "Build a research agent with AgentMuxer and OpenAI Agents."
 ---
 
-Build a research agent that finds a tool, researches the latest TypeScript release, and returns a summary with sources and tool cost.
+In this guide, you'll build an agent that researches the latest TypeScript release and reports what it found, its sources, and the tool cost.
 
 <Accordion title="Add to an existing agent">
   Import the helper and add it to your agent's `tools`:
@@ -26,9 +26,9 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
 - An OpenAI API key for the model.
 
 <Note>
-  This example requests one purchase up to \$0.10; model charges are separate. A prompt budget guides the agent. An [application spending limit](/sdk/applications) enforces a cumulative cap.
+  This example asks the agent to spend up to \$0.10 on one tool call. Model charges are separate. Set an [application spending limit](/sdk/applications) if you need a hard cap; the prompt alone doesn't enforce one.
 
-  Before running unattended, [configure payment confirmation](/guides/billing#unattended-applications). This example cannot collect human payment confirmation. The setting is account-wide and also affects personal agents; the SDK never changes it.
+  This example cannot collect payment confirmation. [Configure your account for unattended purchases](/guides/billing#unattended-applications) before running it. This setting also affects your personal agents.
 </Note>
 
 <Steps>
@@ -44,14 +44,14 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
     ```
   </Step>
   <Step title="Set your keys">
-    Export these in the terminal where you will run the agent:
+    Set both keys in your terminal:
 
     ```bash
     export AGENTMUXER_API_KEY='your-application-key'
     export OPENAI_API_KEY='your-model-provider-key'
     ```
 
-    AgentMuxer authenticates with the application key; no OAuth login is required. Keep keys on your server and out of source control.
+    No browser sign-in is needed. Keep both keys on your server and out of source control.
   </Step>
   <Step title="Create your agent">
     Save this as `agent.ts`:
@@ -85,7 +85,7 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
     - Sources for the summary.
     - The actual tool cost, or the reason it could not complete the purchase.
 
-    To supply your own task, run `node agent.ts 'your task and purchase budget'`. Include the maximum number of purchases and price you authorize.
+    To try your own task, run `node agent.ts 'your task and purchase budget'`. Say how many purchases and how much spending you allow.
   </Step>
 </Steps>
 

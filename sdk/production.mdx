@@ -3,7 +3,7 @@ title: "Run in production"
 description: "Manage credentials, spending, connection lifecycle, and failures in deployed agents."
 ---
 
-Once your first agent works, configure the controls below before serving user requests.
+Before deploying, check your runtime, credentials, spending settings, and error handling.
 
 ## Deployment checklist
 
@@ -34,17 +34,17 @@ Keep each Vercel connection alive for the full run that uses it. If you share a 
 
 ## Timeouts, cancellations, and retries
 
-Set request and run limits using your agent framework. A stopped run or a dropped connection does not establish that a purchase failed: AgentMuxer may already have accepted the request.
+Set request and run limits using your agent framework. A stopped run or dropped connection doesn't mean a purchase failed. AgentMuxer may already have accepted it.
 
 <Warning>
   Do not retry a purchase with a new idempotency key after a timeout. Preserve the original key when replaying the same purchase request. A new key represents a new purchase.
 </Warning>
 
-The Vercel helper disables automatic MCP tool-call retries. For any integration, keep retry behavior explicit around paid calls and preserve the original purchase parameters. If the outcome is unclear, retain the invocation identifier, check usage, and use [troubleshooting](/reference/troubleshooting) before creating another purchase.
+The Vercel helper disables automatic MCP tool-call retries. When retrying a paid call, keep the original arguments and idempotency key. If you're unsure whether it completed, save the invocation ID and [check the existing purchase](/reference/troubleshooting).
 
 ## Handle tool responses
 
-AgentMuxer returns the tool's result along with relevant price, invocation, refusal, or confirmation information. Preserve those details when you transform results for your application.
+Keep cost, invocation ID, and any refusal or confirmation details when processing tool results.
 
 | Response | Your application's next step |
 | --- | --- |

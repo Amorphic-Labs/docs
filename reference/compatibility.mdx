@@ -14,7 +14,7 @@ This page describes `@agentmuxer/sdk` 0.1.0.
 | Browser or mobile bundle | Not supported; keep application keys on your server |
 | Bun, Deno, Workers, or Edge runtimes | Not currently supported by this SDK |
 
-Claude Agent SDK also requires its supported process/container environment. A serverless host is not automatically compatible with every agent framework.
+For Claude Agent SDK, also check its [hosting requirements](https://code.claude.com/docs/en/agent-sdk/hosting).
 
 ## Framework dependencies
 
@@ -26,7 +26,7 @@ Install only the dependencies for your integration. The package declares these o
 | `@agentmuxer/sdk/claude-agent` | `@anthropic-ai/claude-agent-sdk ^0.3.273` |
 | `@agentmuxer/sdk/ai-sdk` | `@ai-sdk/mcp ^2.0.50` |
 
-The integration quickstarts include the additional model-provider and agent-loop packages needed by their examples.
+Each integration guide includes all packages needed to run its example.
 
 ## Approvals and connection behavior
 
@@ -36,7 +36,7 @@ The integration quickstarts include the additional model-provider and agent-loop
 | Claude Agent SDK | HTTP MCP server in the Claude runtime | Native tool permission configuration |
 | Vercel AI SDK | MCP client created by the helper | Result/stream consumption and `close()` |
 
-Framework approval is separate from AgentMuxer's account payment confirmation. SDK 0.1.0's Vercel helper returns `tools` and `close`; it does not expose a purchase-confirmation resumption API. Do not assume a newer upstream MCP client adds that capability to this helper.
+Framework approval is separate from AgentMuxer's account payment confirmation. The Vercel helper in SDK 0.1.0 cannot resume a purchase that requires human payment confirmation.
 
 See [billing and approvals](/guides/billing) for unattended runs. The helper never changes your account's confirmation setting.
 

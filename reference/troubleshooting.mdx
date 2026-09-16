@@ -30,12 +30,12 @@ Start with the symptom you see. For a blocked purchase, read the returned reason
     An application cap is a lifetime limit, not a monthly allowance. Creating another key for the same application does not reset its usage.
   </Accordion>
   <Accordion title="A tool is unavailable or rejects its input">
-    Search again if the listing is unavailable. Inspect the selected tool's current interface and match its parameter names, types, and required fields. Correct the input before retrying a deterministic error.
+    Search again if the listing is unavailable. Inspect the selected tool's current interface and match its parameter names, types, and required fields. Correct the input before retrying.
   </Accordion>
   <Accordion title="A request timed out or the connection dropped">
     A client timeout does not prove that a purchase failed. Check the existing call in your dashboard and retain its invocation ID and original idempotency key.
 
-    Do not issue a replacement purchase with a new key just because you did not receive the response. For a retry of the same logical purchase, preserve the original arguments and key. See [purchase retries](/reference/mcp#purchases-and-retries).
+    Do not issue a replacement purchase with a new key just because you did not receive the response. To retry the same purchase, keep the original arguments and key. See [purchase retries](/reference/mcp#purchases-and-retries).
   </Accordion>
   <Accordion title="A stream ends before the tool finishes">
     With Vercel AI SDK, keep the MCP connection open until the stream is consumed. A web handler must arrange cleanup for stream completion, error, and cancellation. See the [Vercel guide](/sdk/ai-sdk).

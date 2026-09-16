@@ -21,7 +21,7 @@ An application groups your agent's API keys, usage, and optional lifetime spendi
     Your model provider needs its own credentials. Do not expose the AgentMuxer key in client-side code or include it in the agent's prompt.
   </Step>
   <Step title="Add the SDK integration">
-    Each helper reads `AGENTMUXER_API_KEY` by default and also accepts an explicit `apiKey` option. Application-key requests use bearer authentication; no OAuth login is needed.
+    The SDK reads `AGENTMUXER_API_KEY`, or you can pass `agentmuxer({ apiKey })`. No browser sign-in is needed.
 
     <CardGroup cols={3}>
       <Card title="OpenAI Agents" href="/sdk/openai">Add `agentmuxer()` to your agent's tools.</Card>
@@ -31,11 +31,9 @@ An application groups your agent's API keys, usage, and optional lifetime spendi
   </Step>
 </Steps>
 
-## Set up paid execution
+## Enable purchases
 
-Make sure your account has sufficient credits. If your account requires human payment confirmation, your application must support that flow or paid calls will stop for approval. For unattended execution, review the account-wide setting in **Overview**.
-
-Read [billing, limits, and approvals](/guides/billing) before running an unattended application. A task prompt's budget is not an enforced cumulative cap.
+Add credits to your account. If payment confirmation is enabled, your application needs a way to collect it. For agents that run without a person present, review [unattended purchases](/guides/billing#unattended-applications).
 
 ## Manage the application
 
@@ -53,10 +51,10 @@ Choose **Manage** beside the application to update its name, spending limit, or 
   <Accordion title="Revoke one key">
     Select **Revoke key** beside the key you want to remove. Other active keys for the application still work.
 
-    If the key was exposed, revoke it promptly rather than waiting for a routine rotation window.
+    Revoke an exposed key immediately.
   </Accordion>
   <Accordion title="Change the lifetime spending limit">
-    Enter a positive USD amount or leave the field blank for no limit, then choose **Save limit**. The amount must cover spending already incurred and calls on hold.
+    Enter a positive USD amount or leave the field blank for no limit, then choose **Save limit**. The limit must cover money already spent and calls on hold.
 
     Changing a limit does not reset spending or fund the account. All of the application's keys share the same limit.
   </Accordion>
