@@ -39,13 +39,12 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
 
 <Steps>
   <Step title="Install">
-    In a new directory, create an ESM project and install the integration:
+    Create a new project and install the integration:
 
     ```bash
     mkdir my-agent
     cd my-agent
     npm init -y
-    npm pkg set type=module
     npm install @agentmuxer/sdk @ai-sdk/mcp ai @ai-sdk/openai zod
     ```
   </Step>
@@ -60,17 +59,17 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     No browser sign-in is needed. Keep both keys on your server and out of source control.
   </Step>
   <Step title="Create your agent">
-    Save this as `agent.ts`:
+    Save this as `agent.mts`:
 
-    ```typescript agent.ts highlight={9,13,18}
+    ```typescript agent.mts highlight={9,13,18}
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
     import { openai } from "@ai-sdk/openai";
     import { ToolLoopAgent } from "ai";
-
+    
     const prompt = `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources and report the tool cost.
     Spend at most $0.10 on one tool call. Stop if it costs more.`;
-
+    
     const mux = await agentmuxer();
     try {
       const agent = new ToolLoopAgent({
@@ -86,7 +85,7 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
   </Step>
   <Step title="Run">
     ```bash
-    node agent.ts
+    node agent.mts
     ```
 
     The example asks the agent to print:
@@ -101,7 +100,7 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
 
 ## Stream the result
 
-In `agent.ts`, replace the `agent.generate()` call and `console.log(result.text)` with:
+In `agent.mts`, replace the `agent.generate()` call and `console.log(result.text)` with:
 
 ```typescript
 const result = await agent.stream({ prompt });

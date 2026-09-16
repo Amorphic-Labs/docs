@@ -34,13 +34,12 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
 
 <Steps>
   <Step title="Install">
-    In a new directory, create an ESM project and install the integration:
+    Create a new project and install the integration:
 
     ```bash
     mkdir my-agent
     cd my-agent
     npm init -y
-    npm pkg set type=module
     npm install @agentmuxer/sdk @anthropic-ai/claude-agent-sdk
     ```
   </Step>
@@ -55,16 +54,16 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     No browser sign-in is needed. Keep both keys on your server and out of source control.
   </Step>
   <Step title="Run Claude with AgentMuxer">
-    Save this as `agent.ts`. The highlighted lines connect AgentMuxer and let Claude use its tools:
+    Save this as `agent.mts`. The highlighted lines connect AgentMuxer and let Claude use its tools:
 
-    ```typescript agent.ts highlight={11-12}
+    ```typescript agent.mts highlight={11-12}
     import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
     import { query } from "@anthropic-ai/claude-agent-sdk";
-
+    
     const prompt = `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources and report the tool cost.
     Spend at most $0.10 on one tool call. Stop if it costs more.`;
-
+    
     for await (const message of query({
       prompt,
       options: {
@@ -87,7 +86,7 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
   </Step>
   <Step title="Run">
     ```bash
-    node agent.ts
+    node agent.mts
     ```
 
     The example asks the agent to print:
