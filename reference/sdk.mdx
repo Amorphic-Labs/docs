@@ -42,7 +42,7 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
       Optional permission policies. This option is not an allowlist that hides every unlisted tool.
     </ParamField>
     <ParamField body="timeout" type="number">
-      Optional native MCP server timeout. The helper does not override the framework default.
+      Optional per-tool-call timeout in milliseconds. Claude ignores values below 1,000 ms. The helper does not override the framework default.
     </ParamField>
     <ParamField body="alwaysLoad" type="boolean">
       Optional native tool-loading behavior. The helper preserves the framework default.

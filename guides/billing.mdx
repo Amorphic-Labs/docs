@@ -58,7 +58,7 @@ Check [compatibility](/reference/compatibility) for the confirmation capabilitie
 
 ## Charges and uncertain outcomes
 
-Free catalog search does not spend credits. Paid calls are charged under the provider's successful-response billability rule; failed calls are not charged. A successful response means the provider completed the request, not that the answer is necessarily correct or useful for your task.
+Free catalog search does not spend credits. AgentMuxer charges a paid call when the provider returns a successful HTTP response (2xx). A provider error or a failed provider request is not charged. A successful HTTP response does not guarantee that the answer is correct or useful for your task.
 
 An idempotent replay returns the existing purchase outcome without another execution or charge. Keep the original idempotency key and request when retrying a purchase.
 

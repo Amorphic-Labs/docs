@@ -45,7 +45,7 @@ Execute the inspected capability. Supply a new idempotency key for each new logi
 
 <ParamField body="offeringVersionId" type="UUID string" required>The exact version you inspected.</ParamField>
 <ParamField body="maxCostMicros" type="decimal string" required>
-  Maximum initially authorized charge in USD credit micros. One dollar is `"1000000"`; ten cents is `"100000"`. Use `"0"` to authorize no positive charge unless revised terms are explicitly accepted.
+  Maximum initially authorized charge in USD credit micros, encoded as a non-negative whole-number string without a decimal point or leading zeros. One dollar is `"1000000"`; ten cents is `"100000"`. Use `"0"` to authorize no positive charge unless revised terms are explicitly accepted.
 </ParamField>
 <ParamField body="idempotencyKey" type="string" required>
   A non-empty identifier up to 200 characters. Reuse it for retries of the same purchase.
@@ -56,6 +56,19 @@ Execute the inspected capability. Supply a new idempotency key for each new logi
 <ParamField body="acceptTerms" type="UUID string">
   Optional acceptance reference returned with revised price terms. Do not invent this value.
 </ParamField>
+
+### Example arguments
+
+Replace the example version ID with one returned by search, and supply the inputs required by that tool's inspected interface.
+
+```json
+{
+  "offeringVersionId": "11111111-1111-4111-8111-111111111111",
+  "maxCostMicros": "100000",
+  "idempotencyKey": "research-task-unique-purchase-id",
+  "request": {}
+}
+```
 
 ### Request inputs
 
