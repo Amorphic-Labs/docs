@@ -40,7 +40,7 @@ Set request and run limits using your agent framework. A stopped run or a droppe
   Do not retry a purchase with a new idempotency key after a timeout. Preserve the original key when replaying the same purchase request. A new key represents a new purchase.
 </Warning>
 
-The Vercel helper disables automatic MCP retries. For any integration, keep retry behavior explicit around paid calls and preserve the original purchase parameters. If the outcome is unclear, retain the invocation identifier, check usage, and use [troubleshooting](/reference/troubleshooting) before creating another purchase.
+The Vercel helper disables automatic MCP tool-call retries. For any integration, keep retry behavior explicit around paid calls and preserve the original purchase parameters. If the outcome is unclear, retain the invocation identifier, check usage, and use [troubleshooting](/reference/troubleshooting) before creating another purchase.
 
 ## Handle tool responses
 
