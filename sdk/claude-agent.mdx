@@ -54,19 +54,17 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
 
     No browser sign-in is needed. Keep both keys on your server and out of source control.
   </Step>
-  <Step title="Create your agent">
-    Save this as `agent.ts`:
+  <Step title="Run Claude with AgentMuxer">
+    Save this as `agent.ts`. The highlighted lines connect AgentMuxer and let Claude use its tools:
 
-    ```typescript agent.ts
+    ```typescript agent.ts highlight={11-12}
     import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
     import { query } from "@anthropic-ai/claude-agent-sdk";
-
-    const prompt = process.argv[2] ?? `Use AgentMuxer to research the latest TypeScript release.
-    Summarize three changes with sources.
-    You may buy one tool call up to $0.10 (maxCostMicros: "100000").
-    Do not accept higher-priced terms.
-    Report the actual tool cost or explain any refusal.`;
-
+    
+    const prompt = `Use AgentMuxer to research the latest TypeScript release.
+    Summarize three changes with sources and report the tool cost.
+    Spend at most $0.10 on one tool call. Stop if it costs more.`;
+    
     for await (const message of query({
       prompt,
       options: {
@@ -74,11 +72,9 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
         allowedTools: ["mcp__agentmuxer__*"],
       },
     })) {
-      if (message.type !== "result") {
-        continue;
-      }
+      if (message.type !== "result") continue;
       if (message.subtype !== "success") {
-        throw new Error(message.errors.join("\n"));
+        throw new Error(message.errors.join("\n") || message.subtype);
       }
       if (message.is_error) {
         throw new Error(message.result);
@@ -86,6 +82,8 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
       console.log(message.result);
     }
     ```
+
+    `query()` runs Claude's agent loop. The `for await` loop reads its messages; this example prints the final answer or throws if the run fails.
   </Step>
   <Step title="Run">
     ```bash
@@ -98,7 +96,7 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     - Sources for the summary.
     - The actual tool cost, or the reason it could not complete the purchase.
 
-    To try your own task, run `node agent.ts 'your task and purchase budget'`. Say how many purchases and how much spending you allow.
+    To try another task, edit `prompt`. Include the spending you allow.
   </Step>
 </Steps>
 

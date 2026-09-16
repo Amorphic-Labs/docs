@@ -62,17 +62,15 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
   <Step title="Create your agent">
     Save this as `agent.ts`:
 
-    ```typescript agent.ts
+    ```typescript agent.ts highlight={9,13,18}
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
     import { openai } from "@ai-sdk/openai";
     import { ToolLoopAgent } from "ai";
-
-    const prompt = process.argv[2] ?? `Use AgentMuxer to research the latest TypeScript release.
-    Summarize three changes with sources.
-    You may buy one tool call up to $0.10 (maxCostMicros: "100000").
-    Do not accept higher-priced terms.
-    Report the actual tool cost or explain any refusal.`;
-
+    
+    const prompt = `Use AgentMuxer to research the latest TypeScript release.
+    Summarize three changes with sources and report the tool cost.
+    Spend at most $0.10 on one tool call. Stop if it costs more.`;
+    
     const mux = await agentmuxer();
     try {
       const agent = new ToolLoopAgent({
@@ -97,7 +95,7 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     - Sources for the summary.
     - The actual tool cost, or the reason it could not complete the purchase.
 
-    To try your own task, run `node agent.ts 'your task and purchase budget'`. Say how many purchases and how much spending you allow.
+    To try another task, edit `prompt`. Include the spending you allow.
   </Step>
 </Steps>
 
