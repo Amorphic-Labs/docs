@@ -81,6 +81,13 @@
     }
   },
   "fonts": {
-    "family": "Space Grotesk"
-  }
+    "heading": {
+      "family": "Spectral",
+      "weight": 300
+    },
+    "body": {
+      "family": "Space Grotesk"
+    }
+  },
+  "styling": {}
 }
