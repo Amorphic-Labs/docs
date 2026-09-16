@@ -9,15 +9,6 @@
   },
   "favicon": "/favicon.ico",
   "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
     "global": {
       "anchors": [
         {
@@ -35,7 +26,7 @@
     "tabs": [
       {
         "tab": "SDK",
-        "pages": [
+        "groups": [
           {
             "group": "Getting Started",
             "pages": [

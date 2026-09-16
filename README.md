@@ -1,55 +1,35 @@
-# Mintlify Starter Kit
+# AgentMuxer documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+Public guides for connecting agents to AgentMuxer and building with the TypeScript SDK.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Content
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+- **SDK:** framework integrations, application keys, and deployment guidance.
+- **Guides:** personal-agent setup, marketplace usage, billing, and data handling.
+- **Reference:** SDK options, MCP tools, compatibility, troubleshooting, and releases.
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+Pages use MDX and Mintlify's built-in components. Navigation and branding are configured in `docs.json`.
 
-## AI-assisted writing
+## Preview locally
 
-Set up your AI coding tool to work with Mintlify:
+Use a supported Node.js LTS release, such as Node 22 or 24. From this directory:
 
-```bash
-npx skills add https://mintlify.com/docs
+```sh
+npx mint dev --port 3333
 ```
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+Open [the local preview](http://localhost:3333).
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
+## Validate changes
 
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
-npm i -g mint
+```sh
+npx mint validate
+npx mint broken-links
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Open a pull request for review. Merging to `main` publishes through Mintlify.
 
-```
-mint dev
-```
+## Support
 
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+For AgentMuxer questions, contact [founders@amorphiclabs.com](mailto:founders@amorphiclabs.com).
+For documentation components and configuration, see [Mintlify's documentation](https://www.mintlify.com/docs).
