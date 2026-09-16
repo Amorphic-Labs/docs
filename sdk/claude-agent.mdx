@@ -60,11 +60,11 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     ```typescript agent.ts highlight={11-12}
     import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
     import { query } from "@anthropic-ai/claude-agent-sdk";
-    
+
     const prompt = `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources and report the tool cost.
     Spend at most $0.10 on one tool call. Stop if it costs more.`;
-    
+
     for await (const message of query({
       prompt,
       options: {

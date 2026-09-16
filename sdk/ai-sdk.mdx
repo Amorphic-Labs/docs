@@ -66,11 +66,11 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
     import { openai } from "@ai-sdk/openai";
     import { ToolLoopAgent } from "ai";
-    
+
     const prompt = `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources and report the tool cost.
     Spend at most $0.10 on one tool call. Stop if it costs more.`;
-    
+
     const mux = await agentmuxer();
     try {
       const agent = new ToolLoopAgent({

@@ -59,11 +59,11 @@ In this guide, you'll build an agent that researches the latest TypeScript relea
     ```typescript agent.ts highlight={10}
     import { agentmuxer } from "@agentmuxer/sdk/openai";
     import { Agent, run } from "@openai/agents";
-    
+
     const prompt = `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources and report the tool cost.
     Spend at most $0.10 on one tool call. Stop if it costs more.`;
-    
+
     const agent = new Agent({
       name: "Research assistant",
       tools: [agentmuxer()],
