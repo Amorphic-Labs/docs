@@ -13,14 +13,22 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   <Tab title="OpenAI Agents">
     ```ts
     import { agentmuxer } from "@agentmuxer/sdk/openai";
-
-    const tool = agentmuxer({ requireApproval: "never" });
+    
+    const tool = agentmuxer({
+      allowedTools: [
+        "search_offerings",
+        "inspect_offering",
+        "call_offering",
+        "report_outcome",
+      ],
+      requireApproval: "never",
+    });
     ```
 
     Returns the framework's hosted MCP tool configuration. Add it to `tools` on an OpenAI agent. OpenAI receives the application key and connects to AgentMuxer.
 
-    <ParamField body="allowedTools" type="native OpenAI tool filter">
-      Optional. Uses the `allowedTools` type from your installed `@openai/agents` version. Omit it to expose all AgentMuxer tools, including purchases.
+    <ParamField body="allowedTools" type="string[] | { toolNames?: string[] }">
+      Optional tool-name filter. The example exposes all four tools, including purchases. Omit this option to expose every tool the server provides; narrow the list when your application needs fewer tools.
     </ParamField>
     <ParamField body="requireApproval" type='"always" | "never"' default="never">
       OpenAI tool approval policy. With `"always"`, handle approval interruptions and resume the run using OpenAI's API. AgentMuxer payment confirmation and spending limits still apply.
@@ -31,21 +39,25 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   <Tab title="Claude Agent SDK">
     ```ts
     import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
-
-    const server = agentmuxer();
+    
+    const server = agentmuxer({
+      tools: [{ name: "search_offerings", permission_policy: "always_allow" }],
+      timeout: 60_000,
+      alwaysLoad: true,
+    });
     // Pass under options.mcpServers.agentmuxer.
     ```
 
     Returns an HTTP MCP server configuration with bearer authentication.
 
-    <ParamField body="tools" type="native Claude per-tool policies">
-      Optional permission policies. This option is not an allowlist that hides every unlisted tool.
+    <ParamField body="tools" type="McpServerToolPolicy[]">
+      Each entry identifies a tool by `name`. Set `permission_policy` to `"always_allow"`, `"always_ask"`, or `"always_deny"`. The example preapproves search; unlisted tools retain their normal permissions. This option does not hide tools.
     </ParamField>
     <ParamField body="timeout" type="number">
       Optional per-tool-call timeout in milliseconds. Claude ignores values below 1,000 ms. The helper does not override the framework default.
     </ParamField>
     <ParamField body="alwaysLoad" type="boolean">
-      Optional native tool-loading behavior. The helper preserves the framework default.
+      Set `true` to include this server's tools in the model context immediately instead of deferring them to Claude's tool search. Omit it to keep the framework default.
     </ParamField>
 
     Configure `allowedTools`, `disallowedTools`, and `canUseTool` on your Claude agent, not on this helper. Preapproving a framework tool does not bypass AgentMuxer's payment policy.
@@ -55,18 +67,20 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   <Tab title="Vercel AI SDK">
     ```ts
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
-
-    const mux = await agentmuxer();
+    
+    const mux = await agentmuxer({
+      initializationOptions: { timeout: 10_000 },
+    });
     // Pass mux.tools to your agent; await mux.close() after it finishes.
     ```
 
-    Returns a promise for a connection. Automatic MCP retries are disabled.
+    Returns a promise for a connection. Automatic MCP tool-call retries are disabled.
 
-    <ParamField body="initializationOptions" type="native MCP initialization options">
-      Optional initialization and cancellation options accepted by `@ai-sdk/mcp`.
+    <ParamField body="initializationOptions" type="{ signal?: AbortSignal; timeout?: number; maxTotalTimeout?: number }">
+      Optional connection-initialization controls accepted by `@ai-sdk/mcp`. Timeouts are in milliseconds. These options do not set a purchase budget or a timeout for later tool calls.
     </ParamField>
-    <ParamField body="onUncaughtError" type="native MCP error callback">
-      Optional callback for uncaught MCP client errors. Avoid logging credentials.
+    <ParamField body="onUncaughtError" type="(error: unknown) => void">
+      Optional callback for uncaught MCP client errors. Use it to report connection failures to your application. Redact credentials and sensitive tool data before logging errors.
     </ParamField>
     <ResponseField name="tools" type="tool set">
       The discovered AgentMuxer tools, including purchases. Pass to your agent's `tools`.

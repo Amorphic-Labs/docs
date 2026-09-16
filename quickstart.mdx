@@ -1,17 +1,17 @@
 ---
-title: "SDK quickstart"
-description: "Choose your framework and run an agent with AgentMuxer tools."
+title: "TypeScript SDK"
+description: "Add AgentMuxer tools to the agent framework you already use."
 ---
 
-The TypeScript SDK connects your existing agent to AgentMuxer. It exposes tools for discovery, inspection, purchases, and outcome reporting.
+Connect your agent to tools for tasks such as web research, page extraction, and company enrichment. Your agent discovers the tools it needs and uses them through your AgentMuxer account.
 
 ## Choose your framework
 
-Each guide includes installation, credentials, a complete runnable agent, and a command to run it.
+Each guide takes you from an empty directory to a research agent that prints a summary, sources, and tool cost.
 
 <CardGroup cols={3}>
   <Card title="OpenAI Agents" icon="code" href="/sdk/openai">
-    Add a hosted MCP tool to your agent's tools.
+    Add one hosted MCP tool to your agent.
   </Card>
 
   <Card title="Claude Agent SDK" icon="terminal" href="/sdk/claude-agent">
@@ -23,38 +23,23 @@ Each guide includes installation, credentials, a complete runnable agent, and a 
   </Card>
 </CardGroup>
 
-## Before you start
+## What you need
 
-<Steps>
-  <Step title="Use a supported runtime">
-    Use Node.js 22.18 or later with ESM. See [compatibility](/reference/compatibility) for the tested runtimes and framework versions.
-  </Step>
-  <Step title="Create an application key">
-    Open [Applications](https://app.agentmuxer.com/dashboard/applications), create an application, and save its key as `AGENTMUXER_API_KEY` on your server. Application keys authenticate without an OAuth sign-in.
-  </Step>
-  <Step title="Prepare for the example purchase">
-    Add credits in your [dashboard](https://app.agentmuxer.com/dashboard). The quickstarts ask the agent to buy one tool call up to \$0.10. Your model provider bills separately.
-  </Step>
-</Steps>
+- **Node.js 22.18 or later and ESM.** See [tested runtimes and framework versions](/reference/compatibility).
+- **An application key.** Create one in [Applications](https://app.agentmuxer.com/dashboard/applications). Keep it on your server as `AGENTMUXER_API_KEY`; no OAuth sign-in is needed.
+- **A model-provider key.** Your existing provider runs the model and bills you separately.
+- **Credits for paid tools.** The tutorials request one purchase up to \$0.10. Read [billing and approvals](/guides/billing) to choose spending limits and payment-confirmation settings.
 
-<Note>
-  A prompt's budget guides the agent. Set an optional application spending cap in the dashboard when you need a server-enforced cumulative limit. Applications default to no limit. See [billing and approvals](/guides/billing) before running unattended agents.
-</Note>
+## Other frameworks
 
-## Already using another framework?
-
-Use the [native MCP connection](/sdk/native-mcp) if your framework accepts a remote MCP server. You do not need to replace your agent framework or install an AgentMuxer helper for every client.
-
-## What happens next?
-
-Your agent searches for a relevant capability, inspects it, and calls it if the task and spending controls allow. The example prints the agent's answer; ask it to include sources and actual tool cost. If a purchase is blocked, follow the returned next action rather than repeatedly running the example.
+If your framework supports remote MCP servers, [connect with MCP](/sdk/native-mcp). An AgentMuxer-specific helper is optional.
 
 <CardGroup cols={2}>
   <Card title="Applications and keys" href="/sdk/applications">
-    Manage credentials and application usage.
+    Manage credentials and application spending limits.
   </Card>
 
-  <Card title="Run in production" href="/sdk/production">
-    Handle deployment, connection cleanup, and uncertain outcomes.
+  <Card title="SDK reference" href="/reference/sdk">
+    Find helper options, defaults, and return values.
   </Card>
 </CardGroup>

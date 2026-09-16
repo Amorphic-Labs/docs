@@ -1,32 +1,46 @@
 ---
 title: "Vercel AI SDK"
-description: "Connect AgentMuxer to Vercel AI SDK and run an agent that can discover and purchase tools."
+description: "Build a research agent with AgentMuxer and Vercel AI SDK."
 ---
 
-Give your agent tools to discover capabilities, inspect their prices, purchase a tool call, and use the result. Your application's owner pays for AgentMuxer purchases; model-provider charges are separate.
+Build a research agent that finds a tool, researches the latest TypeScript release, and returns a summary with sources and tool cost.
 
-## Add to an existing agent
+<Accordion title="Add to an existing agent">
+  Use your existing `model` and `prompt` with AgentMuxer tools:
 
-Load AgentMuxer tools and pass them to your existing agent:
+  ```typescript
+  import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
+  import { ToolLoopAgent } from "ai";
+  
+  const mux = await agentmuxer();
+  try {
+    const agent = new ToolLoopAgent({ model, tools: mux.tools });
+    const result = await agent.generate({ prompt });
+    console.log(result.text);
+  } finally {
+    await mux.close();
+  }
+  ```
 
-```typescript
-import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
+  The helper returns `{ tools, close }`. It does not choose a model or run the agent.
+</Accordion>
 
-const mux = await agentmuxer();
-// Pass mux.tools to your agent's tools option.
-// Await mux.close() after the full run or stream finishes.
-```
+## Before you start
 
-The helper returns `{ tools, close }`. It does not choose a model or run the agent.
+- Node.js 22.18 or later with ESM; see [compatibility](/reference/compatibility).
+- An [AgentMuxer application key](/sdk/applications) and credits for paid calls.
+- An OpenAI API key for the model.
 
-## Run your first agent
+<Note>
+  This example requests one purchase up to \$0.10; model charges are separate. A prompt budget guides the agent. An [application spending limit](/sdk/applications) enforces a cumulative cap.
 
-Use Node.js 22.18 or later with ESM. You need an [AgentMuxer application key](/sdk/applications), a funded AgentMuxer account for paid calls, and a model-provider key.
-
-These examples run without a human payment-confirmation interface. Before running, review [unattended purchases](/guides/billing#unattended-applications). If confirmation is enabled, you must use a client that supports it or change the account-wide setting, which also affects personal agents.
+  Before running unattended, [configure payment confirmation](/guides/billing#unattended-applications). This example cannot collect human payment confirmation. The setting is account-wide and also affects personal agents; the SDK never changes it.
+</Note>
 
 <Steps>
-  <Step title="Create a project">
+  <Step title="Install">
+    In a new directory, create an ESM project and install the integration:
+
     ```bash
     mkdir my-agent
     cd my-agent
@@ -36,22 +50,28 @@ These examples run without a human payment-confirmation interface. Before runnin
     ```
   </Step>
   <Step title="Set your keys">
-    Export these variables in the terminal where you will run the agent:
+    Export these in the terminal where you will run the agent:
 
     ```bash
     export AGENTMUXER_API_KEY='your-application-key'
     export OPENAI_API_KEY='your-model-provider-key'
     ```
 
-    AgentMuxer uses your application key directly. No OAuth login is required. Keep both keys on your server and out of source control.
+    AgentMuxer authenticates with the application key; no OAuth login is required. Keep keys on your server and out of source control.
   </Step>
   <Step title="Create your agent">
-    Save this complete example as `agent.ts`:
+    Save this as `agent.ts`:
 
     ```typescript agent.ts
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
     import { openai } from "@ai-sdk/openai";
     import { ToolLoopAgent } from "ai";
+    
+    const prompt = process.argv[2] ?? `Use AgentMuxer to research the latest TypeScript release.
+    Summarize three changes with sources.
+    You may buy one tool call up to $0.10 (maxCostMicros: "100000").
+    Do not accept higher-priced terms.
+    Report the actual tool cost or explain any refusal.`;
     
     const mux = await agentmuxer();
     try {
@@ -59,74 +79,52 @@ These examples run without a human payment-confirmation interface. Before runnin
         model: openai("gpt-5.5"),
         tools: mux.tools,
       });
-      const result = await agent.generate({
-        prompt:
-          process.argv[2] ??
-          "Use AgentMuxer to research the latest TypeScript release and summarize three changes with sources. You may buy one tool call up to $0.10 (maxCostMicros: 100000). Do not accept higher-priced terms. Report the actual tool cost or explain any refusal.",
-      });
+      const result = await agent.generate({ prompt });
       console.log(result.text);
     } finally {
       await mux.close();
     }
     ```
   </Step>
-  <Step title="Run it">
+  <Step title="Run">
     ```bash
     node agent.ts
     ```
 
-    The task asks for a sourced summary and the actual tool cost. If no suitable tool is available within the requested budget, the agent should explain the refusal instead.
+    The example asks the agent to print:
 
-    You can replace the task:
+    - Three TypeScript release changes.
+    - Sources for the summary.
+    - The actual tool cost, or the reason it could not complete the purchase.
 
-    ```bash
-    node agent.ts 'Use AgentMuxer to research PostgreSQL 18. You may buy one tool call up to $0.05 (maxCostMicros: 50000). Do not accept higher-priced terms. Print a sourced summary and the actual tool cost.'
-    ```
+    To supply your own task, run `node agent.ts 'your task and purchase budget'`. Include the maximum number of purchases and price you authorize.
   </Step>
 </Steps>
 
-<Note>
-  The default prompt authorizes one purchase up to $0.10. Prompt instructions guide the model; they are not a hard cumulative spending cap. Set an [application spending limit](/sdk/applications) for a server-enforced cap. Each run may make a new purchase.
-</Note>
-
-## Payment confirmation
-
-In `@agentmuxer/sdk` 0.1.0, this helper does not expose a flow for resuming AgentMuxer purchase-confirmation requests. For unattended purchases, your account must allow purchases without human payment confirmation. Otherwise, use a client with confirmation support.
-
-Review [billing and approvals](/guides/billing) before changing that setting: it applies to your personal agents as well as applications. Application spending limits still apply.
-
 ## Stream the result
 
-Keep the connection open until you have consumed the stream. In the complete example above, replace `agent.generate()` and `console.log(result.text)` with:
+In `agent.ts`, replace the `agent.generate()` call and `console.log(result.text)` with:
 
 ```typescript
-const result = await agent.stream({
-  prompt: "Use AgentMuxer to research the latest TypeScript release. You may buy one tool call up to $0.10 (maxCostMicros: 100000). Do not accept higher-priced terms. Summarize three changes with sources and the actual tool cost.",
-});
+const result = await agent.stream({ prompt });
 for await (const part of result.textStream) {
   process.stdout.write(part);
 }
 ```
 
-Keep this code inside the `try` block. The existing `finally` closes the connection after streaming finishes. For an HTTP response stream, tie cleanup to stream completion, errors, and cancellation; do not close the connection when you merely return the stream.
+Keep this inside the `try` block. The existing `finally` closes the connection after you consume the stream. For an HTTP response stream, attach cleanup to completion, error, and cancellation; do not close the connection when you merely return the stream.
 
-## Customize the integration
+## Connection options and approvals
 
-| Control | Where to configure it |
-| --- | --- |
-| Application key | `agentmuxer({ apiKey })`, or `AGENTMUXER_API_KEY` |
-| MCP initialization and cancellation | The helper's `initializationOptions` |
-| Asynchronous MCP errors | The helper's `onUncaughtError` |
-| Model, stop conditions, active tools, and tool approval | Your AI SDK agent |
-| Cumulative tool spending | Your AgentMuxer application's spending limit |
+The helper accepts `initializationOptions` and `onUncaughtError` and disables automatic MCP tool-call retries. Configure model behavior and tool permissions in your AI SDK agent. See the [SDK reference](/reference/sdk).
 
-Automatic MCP tool-call retries are disabled. Native tool results and errors pass through. See the [SDK reference](/reference/sdk) and [compatibility](/reference/compatibility).
+In SDK 0.1.0, the helper does not expose a flow for resuming AgentMuxer purchase-confirmation requests. Use unattended purchases as described above or a client with confirmation support. Application spending limits still apply.
 
 <CardGroup cols={2}>
   <Card title="Applications and keys" icon="key" href="/sdk/applications">
-    Manage credentials, spending limits, and application access.
+    Manage credentials and spending limits.
   </Card>
   <Card title="Run in production" icon="server" href="/sdk/production">
-    Handle connection lifecycle, failures, and tracing.
+    Handle deployment, failures, and tracing.
   </Card>
 </CardGroup>
