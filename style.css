@@ -1,0 +1,75 @@
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --amx-ink: #161819;
+  --amx-muted: #59615d;
+  --amx-card: #fafbf8;
+  --amx-border: #c7cbc7;
+  --amx-hover: #dfe3df;
+}
+
+.dark {
+  --amx-ink: #e8ebe9;
+  --amx-muted: #909895;
+  --amx-card: #101214;
+  --amx-border: #2a2e30;
+  --amx-hover: #1b1f21;
+}
+
+body {
+  font-feature-settings: "ss01", "ss03", "cv02";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#page-title,
+#content :is(h1, h2, h3) {
+  color: var(--amx-ink);
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+#page-title {
+  line-height: 1.1;
+}
+
+#content [data-component-part="card-title"] {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+#content,
+#header > div {
+  color: var(--amx-muted);
+}
+
+code,
+kbd,
+pre {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+#content :is(.card, .callout, .code-block, .code-group, .accordion, .frame),
+#pagination a {
+  border-radius: 0.375rem;
+}
+
+#content .card {
+  background: var(--amx-card);
+  border-color: var(--amx-border);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  #content .card:hover {
+    background: var(--amx-hover);
+  }
+}
