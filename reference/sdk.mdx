@@ -13,7 +13,7 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   <Tab title="OpenAI Agents">
     ```ts
     import { agentmuxer } from "@agentmuxer/sdk/openai";
-    
+
     const tool = agentmuxer({
       allowedTools: [
         "search_offerings",
@@ -39,7 +39,7 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   <Tab title="Claude Agent SDK">
     ```ts
     import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
-    
+
     const server = agentmuxer({
       tools: [{ name: "search_offerings", permission_policy: "always_allow" }],
       timeout: 60_000,
@@ -67,7 +67,7 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   <Tab title="Vercel AI SDK">
     ```ts
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
-    
+
     const mux = await agentmuxer({
       initializationOptions: { timeout: 10_000 },
     });

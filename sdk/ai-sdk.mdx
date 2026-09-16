@@ -11,7 +11,7 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
   ```typescript
   import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
   import { ToolLoopAgent } from "ai";
-  
+
   const mux = await agentmuxer();
   try {
     const agent = new ToolLoopAgent({ model, tools: mux.tools });
@@ -66,13 +66,13 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
     import { agentmuxer } from "@agentmuxer/sdk/ai-sdk";
     import { openai } from "@ai-sdk/openai";
     import { ToolLoopAgent } from "ai";
-    
+
     const prompt = process.argv[2] ?? `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources.
     You may buy one tool call up to $0.10 (maxCostMicros: "100000").
     Do not accept higher-priced terms.
     Report the actual tool cost or explain any refusal.`;
-    
+
     const mux = await agentmuxer();
     try {
       const agent = new ToolLoopAgent({

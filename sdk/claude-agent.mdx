@@ -10,7 +10,7 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
 
   ```typescript
   import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
-  
+
   const options = {
     mcpServers: { agentmuxer: agentmuxer() },
     allowedTools: ["mcp__agentmuxer__*"],
@@ -60,13 +60,13 @@ Build a research agent that finds a tool, researches the latest TypeScript relea
     ```typescript agent.ts
     import { agentmuxer } from "@agentmuxer/sdk/claude-agent";
     import { query } from "@anthropic-ai/claude-agent-sdk";
-    
+
     const prompt = process.argv[2] ?? `Use AgentMuxer to research the latest TypeScript release.
     Summarize three changes with sources.
     You may buy one tool call up to $0.10 (maxCostMicros: "100000").
     Do not accept higher-priced terms.
     Report the actual tool cost or explain any refusal.`;
-    
+
     for await (const message of query({
       prompt,
       options: {
