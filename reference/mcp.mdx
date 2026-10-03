@@ -1,15 +1,20 @@
 ---
 title: "MCP tool reference"
-description: "Discover, inspect, purchase, and report tool outcomes."
+description: "Discover, inspect, call, recover, and report tool outcomes."
 ---
 
-Connect an MCP client to `https://mcp.agentmuxer.com/mcp`. Personal clients sign in through their supported authentication flow. Applications send their API key as a bearer token. Authentication is required for free discovery as well as paid calls.
+Connect an MCP client to `https://mcp.agentmuxer.com/mcp`. Every tool runs under your AgentMuxer account, for free discovery as well as paid calls.
 
-The [SDK helpers](/reference/sdk) configure this connection for your framework. The examples below are MCP tool arguments, not methods exported by the SDK.
+- **Personal clients** sign in with OAuth when they connect. The first request answers with a standard HTTP 401 challenge, and clients that support MCP authorization open the browser sign-in for you. See [connect your agent](/guides/connect).
+- **Applications** send their application key as a bearer token: `Authorization: Bearer <application key>`.
+
+The [SDK framework adapters](/reference/sdk#framework-adapters) configure this connection for your framework. The examples below are MCP tool arguments, not methods exported by the SDK.
+
+Five tools are available. Call an operation directly when you know its provider, path, and inputs. Search when you need a capability, and inspect when its inputs are unclear.
 
 ## search_offerings
 
-Find available capabilities. Searching does not invoke a provider or spend credits.
+Find API operations when you don't know which one to call. Searching is free: it never calls a provider or spends credits.
 
 ```json
 {
@@ -18,114 +23,159 @@ Find available capabilities. Searching does not invoke a provider or spend credi
 }
 ```
 
-<ParamField body="query" type="string">Optional search text, up to 500 characters. Omit it to browse.</ParamField>
+<ParamField body="query" type="string">Optional natural-language goal, up to 500 characters. Omit it to browse.</ParamField>
+<ParamField body="provider" type="string">Optional provider slug, such as `exa`, to limit results to one provider.</ParamField>
 <ParamField body="limit" type="integer">Optional page size from 1 to 50.</ParamField>
-<ParamField body="cursor" type="string">An opaque cursor returned by an earlier search. Keep the same filters when paging.</ParamField>
+<ParamField body="cursor" type="string">An opaque cursor returned by an earlier search. Keep the same query and filters when paging.</ParamField>
 <ParamField body="direction" type='"after" | "before"' default="after">Page forward or backward with a cursor.</ParamField>
 
 <Accordion title="Additional filters">
-  Use arrays for `publisherIds`, `protocols`, `taskFamilies`, `tags`, `trustTiers`, `capabilityGroups`, and `useCases`. Use values from the catalog. Trust tiers are `indexed`, `verified`, and `benchmarked`; they describe available evidence, not a guarantee of useful output.
+  Use arrays for `protocols`, `taskFamilies`, `tags`, `trustTiers`, `capabilityGroups`, and `useCases`, with values from the catalog. Trust tiers are `indexed` (listed), `verified` (its interface passed request checks), and `benchmarked` (also measured in use).
 </Accordion>
 
-Results include `items`, with each item's `offeringVersion.id`, description, availability, and price when priced. Use the returned `nextCursor` or `prevCursor` to continue.
+Results include `items`, ranked by how closely each operation fits your query. Each item names an operation by `provider`, `method`, and `path`, with its `name`, `description`, `availability` (`free`, `priced`, or `unavailable`), and `pricing`. Each `pricing` has a readable `summary` and a `kind`: `free`, `fixed`, `components` (unit rates), `estimate`, `unknown`, or `unavailable`. Estimates are indicative; the call itself sets the payment terms within your maximum. Use the returned `nextCursor` or `prevCursor` to continue. If a cursor is refused with `invalid_cursor`, search again without it.
 
 ## inspect_offering
 
-Inspect the exact version selected from search before calling it.
+Read the request fields and pricing for one operation. Inspection is free and never calls the provider. It's optional when you already know the request.
 
-<ParamField body="offeringVersionId" type="UUID string" required>
-  The `offeringVersion.id` returned by search.
+```json
+{
+  "provider": "exa",
+  "path": "/search"
+}
+```
+
+<ParamField body="provider" type="string" required>The provider slug from search, such as `exa`.</ParamField>
+<ParamField body="path" type="string" required>The path template from search, such as `/search` or `/items/{id}`.</ParamField>
+<ParamField body="method" type='"GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS"'>
+  Optional when the path serves one method. When a path serves several, the response lists the methods to choose from.
 </ParamField>
 
-Inspection returns the tool's interface and usage information. Follow its required fields, types, and input locations. The listed price is indicative; execution enforces your maximum charge.
+Inspection returns the `operation` with its current pricing and a call-ready view of the `request`: each field your agent needs for a valid first call, with its type, whether it's required, and where it goes (`pathParams`, `query`, `headers`, `cookies`, or `body`). Where a compact view could change a field's meaning, the result keeps the complete request description, including parameter serialization and media types. `examples` holds sample requests when available.
+
+Follow the declared types and locations. The listed price describes the operation; the call enforces your maximum charge.
 
 ## call_offering
 
-Execute the inspected capability. Supply a new idempotency key for each new logical purchase.
+Call an API operation by provider and path, within your maximum charge. Supply a new idempotency key for each new logical attempt.
 
-<ParamField body="offeringVersionId" type="UUID string" required>The exact version you inspected.</ParamField>
-<ParamField body="maxCostMicros" type="decimal string" required>
-  Maximum initially authorized charge in USD credit micros, encoded as a non-negative whole-number string without a decimal point or leading zeros. One dollar is `"1000000"`; ten cents is `"100000"`. Use `"0"` to authorize no positive charge unless revised terms are explicitly accepted.
+<ParamField body="provider" type="string" required>The provider slug, such as `exa`.</ParamField>
+<ParamField body="path" type="string" required>The path template, such as `/search`. Put values for `{placeholders}` in `pathParams`.</ParamField>
+<ParamField body="method" type='"GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS"'>
+  Optional when the path serves one method. When a path serves several, the refusal lists the methods to choose from.
 </ParamField>
 <ParamField body="idempotencyKey" type="string" required>
-  A non-empty identifier up to 200 characters. Reuse it for retries of the same purchase.
+  A non-empty identifier up to 200 characters, unique across your account. Reuse it for retries, recovery, and accepting terms for the same call.
 </ParamField>
-<ParamField body="request" type="object" required>
-  Provider inputs using the inspected interface. Use `{}` when the tool requires no inputs.
+<ParamField body="maxCostMicros" type="decimal string" default='"1000000"'>
+  Maximum charge in USD credit micros, as a whole-number string. One dollar is `"1000000"`; ten cents is `"100000"`. `"0"` permits no positive charge. Without `maxCostMicros` or `maxCost`, the maximum is \$1.00.
+</ParamField>
+<ParamField body="maxCost" type="decimal string">
+  The same maximum as a USD string with up to six decimal places, such as `"0.25"`. Supply `maxCost` or `maxCostMicros`, not both.
 </ParamField>
 <ParamField body="acceptTerms" type="UUID string">
-  Optional acceptance reference returned with revised price terms. Do not invent this value.
+  Accepts the exact terms of a `requires_action` result. Copy it from `nextAction.acceptTerms` and repeat the original arguments unchanged.
 </ParamField>
 
 ### Example arguments
 
-Replace the example version ID with one returned by search, and supply the inputs required by that tool's inspected interface.
+Replace the provider, path, and inputs with an operation from search, and supply the inputs that inspection describes.
 
 ```json
 {
-  "offeringVersionId": "11111111-1111-4111-8111-111111111111",
-  "maxCostMicros": "100000",
-  "idempotencyKey": "research-task-unique-purchase-id",
-  "request": {}
+  "provider": "exa",
+  "path": "/search",
+  "body": { "query": "climate research" },
+  "maxCost": "0.10",
+  "idempotencyKey": "research-task-unique-call-id"
 }
 ```
 
 ### Request inputs
 
+Put provider inputs at the top level of the arguments, next to `provider` and `path`.
+
 | Field | Use |
 | --- | --- |
-| `path` | Named path parameters |
+| `pathParams` | Values for the path template's named parameters |
 | `query` | Named query parameters |
-| `headers` | Headers required by the tool's public interface |
+| `headers` | Headers required by the operation's interface |
+| `cookies` | Cookies required by the operation's interface |
 | `body` | Request body matching the inspected schema |
-| `cookies`, `querystring`, `contentType` | Only when specified by the interface |
+| `querystring`, `contentType` | Only when specified by the interface |
 | `binaryBody` | Base64-encoded raw content as `{ base64 }` |
 | `multipartFiles` | Files grouped by field name, each with `base64`, `filename`, and optional `contentType` |
 
-Do not pass your AgentMuxer application key as a tool input. Authentication belongs on the MCP connection.
+Keep your AgentMuxer application key out of tool inputs. Authentication belongs on the MCP connection.
 
 ### Purchases and retries
 
 <Steps>
-  <Step title="Use the price and interface you inspected">
-    Submit the exact offering version, inputs, maximum charge, and an idempotency key. Account balance, application caps, and payment confirmation still apply.
+  <Step title="Call within your maximum">
+    Submit the operation, inputs, an idempotency key, and optionally a maximum. Account balance, application spending limits, and payment confirmation still apply. Only a 2xx provider response bills, and it bills exactly once at the accepted price.
   </Step>
-  <Step title="Handle revised terms explicitly">
-    If the response has `status: "price_confirmation_required"`, review the exact cost and expiry. To accept, repeat the original call unchanged, including its maximum and key, adding the returned `continuation.acceptTerms`. If you decline, stop. Acceptance does not override spending limits.
+  <Step title="Accept higher terms explicitly">
+    When the price is above your maximum, the result has `kind: "requires_action"` with `approvalKind: "agent"`, the exact `terms` (`costMicros` and `expiresAt`), and `nextAction.acceptTerms`. To accept, repeat the original arguments unchanged, including the key, adding `acceptTerms`. If you decline, stop. Acceptance works within your spending limits.
   </Step>
-  <Step title="Preserve the purchase identity">
-    A replay with the same key returns the existing result without another execution or charge. A client timeout is not evidence that no purchase happened. Check the existing call rather than starting another purchase. Expired confirmation terms require a new key after you decide to start a new purchase.
+  <Step title="Confirm as a person when your account requires it">
+    When payment confirmation is required, AgentMuxer asks the person through the client's confirmation prompt, and the call continues after approval. A client without confirmation prompts receives an `approval_required` refusal, and nothing is charged. See [billing and approvals](/guides/billing).
+  </Step>
+  <Step title="Recover with the original key">
+    A replay with the same key and arguments returns the existing result without another execution or charge. After a timeout, a lost response, or a `pending` result, call [`get_invocation`](#get_invocation) with the original key. Start a new call with a new key only when you deliberately want a new purchase.
   </Step>
 </Steps>
 
 ### Results
 
+Every result has a `kind`. Results for a known call also include `invocationId`, `idempotencyKey`, `operation`, and `billing`.
+
+<ResponseField name="kind" type='"responded" | "pending" | "requires_action" | "refused"'>
+  `responded`: the provider answered. `pending`: the outcome isn't final yet (`reason` is `executing`, `reconciling`, or `outcome_unknown`); recover with `get_invocation`. `requires_action`: the call needs accepted terms or a person's confirmation. `refused`: nothing was bought.
+</ResponseField>
 <ResponseField name="response" type="object">
-  The invocation result, including the provider response and invocation identifier.
+  For `responded` results: the provider's HTTP `status` and `body`. A provider non-2xx is still `responded`, and it doesn't bill. A body that has expired or wasn't kept has `bodyUnavailable` instead.
 </ResponseField>
-<ResponseField name="cost.costMicros" type="decimal string">
-  The tool cost in USD credit micros.
+<ResponseField name="replayed" type="boolean">
+  For `responded` results: whether this is a replay of an existing call.
 </ResponseField>
-<ResponseField name="cost.chargeStatus" type='"finalized" | "pending"'>
-  Whether accounting has finalized. A pending charge is not a reason to buy the tool again.
+<ResponseField name="billing.chargeStatus" type='"pending" | "finalized"'>
+  Whether accounting has finalized. A pending charge is not a reason to call again.
 </ResponseField>
-<ResponseField name="cost.replayed" type="boolean">
-  Whether this is a replay of an existing purchase.
+<ResponseField name="billing.billedMicros" type="decimal string">
+  The amount billed in USD credit micros, when known. `billing.acceptedCostMicros` is the accepted price.
 </ResponseField>
-<ResponseField name="cost.balanceMicros" type="decimal string">
-  Account balance when present in the response.
+<ResponseField name="billing.balanceMicros" type="decimal string">
+  Your account balance, when present in the response.
 </ResponseField>
 
-Refusals are structured results with `refusedBy` and relevant recovery information. An insufficient-balance response can include a `topupUrl`; show it to the account owner. Follow [troubleshooting](/reference/troubleshooting) instead of blindly retrying.
+Refusals are results, not protocol errors. `refusedBy` names the refusing subsystem (`auth`, `policy`, `balance`, `budget`, `cap`, `resolution`, `request`, or `listing`), and `reason`, `message`, and optional `diagnostics` explain why. Follow `nextAction` when present: an insufficient-balance refusal carries `nextAction: { kind: "top_up", url }` for the account owner, and request errors name the field to correct. Invalid arguments return an error that names the failing field. See [troubleshooting](/reference/troubleshooting) before retrying.
+
+A provider response, including HTTP 202, reports the provider's answer; a provider job may continue after it.
+
+## get_invocation
+
+Recover a lost response or check a pending call. Lookup is free: it never calls the provider, reserves credits, or resumes a purchase.
+
+```json
+{
+  "idempotencyKey": "research-task-unique-call-id"
+}
+```
+
+<ParamField body="invocationId" type="UUID string">The `invocationId` from an earlier result.</ParamField>
+<ParamField body="idempotencyKey" type="string">The original idempotency key of the call.</ParamField>
+
+Supply exactly one of the two. The result has the same shape as a `call_offering` result. For a `pending` call, look it up again later. If the lookup returns `invocation_not_found`, repeat the original `call_offering` arguments with the same key; the key ensures the call runs at most once.
 
 ## report_outcome
 
-Report whether an invocation helped with the task. This feedback is separate from the provider's HTTP response and billing.
+Report whether an invocation helped with the task. Reporting is optional, and this feedback is separate from the provider's HTTP response and billing.
 
 <ParamField body="invocationId" type="UUID string" required>The invocation identifier returned by the call.</ParamField>
 <ParamField body="outcome" type='"succeeded" | "failed" | "not-useful"' required>Choose the result that describes the task outcome.</ParamField>
-<ParamField body="detail" type="string">Optional explanation up to 1,000 characters. Do not include secrets.</ParamField>
+<ParamField body="detail" type="string">Optional explanation up to 1,000 characters. Leave out secrets.</ParamField>
 
-The response reports `accepted` and `duplicate`. Repeated reports from the same account for an invocation are acknowledged without recording another report.
+The response reports `accepted` and `duplicate`. Your account records one report per invocation; repeated reports are acknowledged without recording another.
 
 <Card title="Billing, limits, and approvals" href="/guides/billing">See when charges apply and how framework permissions differ from payment confirmation.</Card>

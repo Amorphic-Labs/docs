@@ -1,12 +1,195 @@
 ---
 title: "SDK reference"
-description: "Import paths, options, and return values for @agentmuxer/sdk."
+description: "Clients, options, return values, and framework adapters in @agentmuxer/sdk."
 ---
 
-The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY` unless you pass `apiKey`. All connect to `https://mcp.agentmuxer.com/mcp`.
+`@agentmuxer/sdk` 0.6 provides a direct API client, an Admin client, and three framework adapters. The clients and adapters read `AGENTMUXER_API_KEY` unless you pass `apiKey`. The [SDK README](https://www.npmjs.com/package/@agentmuxer/sdk) has the complete reference and runnable examples.
+
+| Import | Use |
+| --- | --- |
+| `AgentMuxer` from `@agentmuxer/sdk` | Search, inspect, and call APIs from your server |
+| `AgentMuxerAdmin` from `@agentmuxer/sdk/admin` | Manage applications, keys, caps, and usage with an admin key |
+| `agentmuxer` from `/openai`, `/claude-agent`, or `/ai-sdk` | Give a framework agent AgentMuxer's MCP tools |
+
+## Direct client
+
+```ts
+import AgentMuxer from "@agentmuxer/sdk";
+
+const client = new AgentMuxer(); // Reads AGENTMUXER_API_KEY.
+
+const result = await client.run({
+  provider: "exa",
+  path: "/search",
+  body: { query: "climate research" },
+  maxCost: "0.10",
+});
+if (result.kind === "responded" && "body" in result.response) {
+  console.log(result.response.status, result.response.body);
+} else {
+  console.log(result.kind, result.idempotencyKey, result.requestId);
+}
+```
+
+`AgentMuxer` is both the default export and a named export.
+
+### Client options
+
+<ParamField body="apiKey" type="string" default="AGENTMUXER_API_KEY">
+  Your application key, supplied from a server-side secret store. The key must be non-empty, printable, and without surrounding whitespace. Keep it out of browser and mobile bundles and out of tool arguments.
+</ParamField>
+<ParamField body="accessToken" type="string">
+  An AgentMuxer OAuth access token, used instead of `apiKey`. You own its storage and refresh.
+</ParamField>
+<ParamField body="partition" type="string">
+  Separates invocations per end user of your backend. Derive it from your own verified session.
+</ParamField>
+<ParamField body="timeout" type="number" default="100000">
+  Milliseconds per attempt.
+</ParamField>
+<ParamField body="maxRetries" type="number" default="2">
+  Automatic retries per call after a lost connection, a timeout, or HTTP 408, 429, 500, 502, 503, 504, or 520–524, honoring `Retry-After` up to 60 seconds. `run` resends the same idempotency key, so a retry never charges twice.
+</ParamField>
+<ParamField body="throwOnRefusal" type="boolean" default="false">
+  Throw `RefusalError` for any `run` result other than `responded`.
+</ParamField>
+<ParamField body="fetch" type="typeof fetch" default="global fetch">
+  A custom fetch implementation, also used for event streams.
+</ParamField>
+<ParamField body="baseUrl" type="string" default="https://api.agentmuxer.com">
+  Another API origin. Use only an origin you trust with the key.
+</ParamField>
+
+### Methods
+
+Every method takes its input first and per-call options second.
+
+| Method | Returns |
+| --- | --- |
+| `search(input?, options?)` | Operations with `provider`, `method`, `path`, and `pricing`, paged with `nextCursor`. Free. |
+| `inspect(input, options?)` | The request description for `{ provider, path, method? }`. Pass `view: "call_ready"` for the compact view agents receive. Free. |
+| `run(input, options?)` | One invocation: `responded`, `pending`, `requires_action`, or `refused`. |
+| `getInvocation(lookup, options?)` | A saved result by `{ invocationId }` or `{ idempotencyKey }`. Never calls the provider or spends. |
+| `accountStatus(options?)` | The authenticated identity, balance, and spending limit. Application keys get their own limit and `balance: null`. |
+| `execution({ invocationId, target? })` | A handle to wait for, stream, follow, resume, or stop an existing invocation. |
+
+`search`, `inspect`, `getInvocation`, and `accountStatus` return refusals as values with `kind: "refused"`. Results carry the request id as `result.requestId`; include it when you contact support.
+
+<ParamField body="options.signal" type="AbortSignal">
+  Cancels the call. An abort throws `AgentMuxerError` with kind `"aborted"` and is never retried. For `run`, recover with the original key, because the request may already have been sent.
+</ParamField>
+<ParamField body="options.timeout" type="number">
+  Milliseconds per attempt for this call. Overrides the client's `timeout`.
+</ParamField>
+<ParamField body="options.maxRetries" type="number">
+  Automatic retries for this call. Pass `0` to send once.
+</ParamField>
+<ParamField body="options.headers" type="HeadersInit">
+  Extra headers. The SDK's own authorization, content, partition, and idempotency headers take precedence.
+</ParamField>
+
+`run` also accepts `idempotencyKey` and `throwOnRefusal` in its options.
+
+```ts
+const controller = new AbortController();
+await client.search({ query: "weather" }, { timeout: 5_000, maxRetries: 0 });
+await client.run(
+  { provider: "exa", path: "/search", body: { query: "weather" } },
+  { signal: controller.signal },
+);
+```
+
+### Run input
+
+A call names a provider, a path, and its inputs.
+
+<ParamField body="provider" type="string" required>The provider slug, such as `exa`.</ParamField>
+<ParamField body="path" type="string" required>The path template, such as `/search`. Put path values in `pathParams`.</ParamField>
+<ParamField body="method" type="string">Optional when the path serves one method. Pass it when the path serves several.</ParamField>
+<ParamField body="body" type="unknown">
+  The request body. Put other inputs in `pathParams`, `query`, `headers`, `cookies`, `querystring`, `contentType`, `binaryBody`, or `multipartFiles`, as [`inspect`](#methods) describes.
+</ParamField>
+<ParamField body="maxCost" type="string" default='"1"'>
+  The maximum charge in USD, as an exact decimal string with up to six decimal places, such as `"0.25"`. Without `maxCost` or `maxCostMicros`, the maximum is \$1.00. `"0"` means the call may not charge anything.
+</ParamField>
+<ParamField body="maxCostMicros" type="string">
+  The same maximum in integer USD micros, such as `"250000"`. Supply `maxCost` or `maxCostMicros`, not both.
+</ParamField>
+<ParamField body="idempotencyKey" type="string">
+  Identifies one invocation. The client generates one before sending when you omit it and returns it as `result.idempotencyKey`. For crash safety, create your own random UUID and persist it before calling `run`.
+</ParamField>
+<ParamField body="acceptTerms" type="string">
+  Accepts the exact terms of a `requires_action` result with `approvalKind: "agent"`. Repeat the unchanged request with the original key and `result.nextAction.acceptTerms`.
+</ParamField>
+
+Recover with the original key, never a new one, whenever the outcome isn't final: a `pending` result, a `gateway_unavailable` refusal, or a `ConnectionError`, `aborted`, 408, 5xx, or `invalid_response` error from `run`. `client.getInvocation({ idempotencyKey })` reads the saved state. See [Idempotency and recovery](https://www.npmjs.com/package/@agentmuxer/sdk#idempotency-and-recovery) in the README.
+
+### Errors
+
+Every error the SDK throws is an `AgentMuxerError` with a `kind` and, when known, the HTTP `status`, `requestId`, `idempotencyKey`, and `retryAfterSeconds`. All classes are exported from `@agentmuxer/sdk`.
+
+| Class | `kind` | When |
+| --- | --- | --- |
+| `ConnectionError` | `transport` | No complete response arrived after all attempts. |
+| `ConnectionTimeoutError` | `transport` | The per-attempt timeout elapsed on the last attempt. Extends `ConnectionError`. |
+| `RateLimitError` | `http` | HTTP 429 after all attempts. Has `retryAfterSeconds`. |
+| `RefusalError` | `refused` | `throwOnRefusal` is set and `run` returned another kind. Has the typed `result`. |
+| `AgentMuxerError` | `aborted` | Your `signal` aborted the call. |
+| `AgentMuxerError` | `invalid_request` | Local validation failed before sending. The message names the failing field. |
+| `AgentMuxerError` | `http` | Another non-2xx response without a readable result. |
+| `AgentMuxerError` | `invalid_response` | A 2xx response that didn't match the published contract. |
+
+With `throwOnRefusal`, set on the client or per call, `run` is typed to return only `responded` results:
+
+```ts
+import { AgentMuxer, RefusalError } from "@agentmuxer/sdk";
+
+const strict = new AgentMuxer({ throwOnRefusal: true });
+try {
+  const { response } = await strict.run({
+    provider: "exa",
+    path: "/search",
+    body: { query: "climate research" },
+  });
+  console.log(response.status);
+} catch (error) {
+  if (error instanceof RefusalError) {
+    // Keep error.idempotencyKey: a pending or requires_action result may still complete.
+    console.log(error.result.kind, error.idempotencyKey, error.invocationId);
+  } else throw error;
+}
+```
+
+### Account status
+
+```ts
+const account = await client.accountStatus();
+if ("kind" in account) throw new Error(account.message);
+console.log(account.balance?.availableMicros, account.spendingLimitMicros);
+```
+
+## Admin client
+
+Platforms that give each customer company its own application manage those applications from their servers with an admin key, created on the dashboard's **Applications** page.
+
+```ts
+import { AgentMuxerAdmin } from "@agentmuxer/sdk/admin";
+
+const admin = new AgentMuxerAdmin({ apiKey: process.env.AGENTMUXER_ADMIN_KEY! });
+const { application } = await admin.ensureApplication("company_42", {
+  label: "Acme Corp",
+  cumulativeLimitMicros: "50000000", // Optional lifetime cap: $50.00.
+});
+```
+
+The constructor takes `apiKey`, `baseUrl`, `fetch`, `timeout`, and a client-wide `signal`, and every method accepts `{ signal }`. Admin requests run once; key creation takes your persisted idempotency key. See [Admin client](https://www.npmjs.com/package/@agentmuxer/sdk#admin-client) in the README for every method.
+
+## Framework adapters
+
+Each adapter connects to `https://mcp.agentmuxer.com/mcp` and exposes AgentMuxer's MCP tools: `search_offerings`, `inspect_offering`, `call_offering`, `get_invocation`, and `report_outcome`. See the [MCP tool reference](/reference/mcp).
 
 <ParamField body="apiKey" type="string">
-  Your application key, supplied from a server-side secret store. Omit it to use `AGENTMUXER_API_KEY`. Empty values, surrounding whitespace, and non-printable characters are rejected. Browser use is rejected.
+  Your application key, supplied from a server-side secret store. Omit it to use `AGENTMUXER_API_KEY`.
 </ParamField>
 
 <Tabs>
@@ -19,16 +202,17 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
         "search_offerings",
         "inspect_offering",
         "call_offering",
+        "get_invocation",
         "report_outcome",
       ],
       requireApproval: "never",
     });
     ```
 
-    Returns the framework's hosted MCP tool configuration. Add it to `tools` on an OpenAI agent. OpenAI receives the application key and connects to AgentMuxer.
+    Returns the framework's hosted MCP tool configuration. Add it to `tools` on an OpenAI agent. OpenAI receives the application key and connects to AgentMuxer. Options type: `OpenAIAgentsOptions`.
 
     <ParamField body="allowedTools" type="string[] | { toolNames?: string[] }">
-      Optional tool-name filter. The example exposes all four tools, including purchases. Omit this option to expose every tool the server provides; narrow the list when your application needs fewer tools.
+      Optional tool-name filter. The example exposes all five tools, including purchases. Omit this option to expose every tool the server provides; narrow the list when your application needs fewer tools.
     </ParamField>
     <ParamField body="requireApproval" type='"always" | "never"' default="never">
       OpenAI tool approval policy. With `"always"`, handle approval interruptions and resume the run using OpenAI's API. AgentMuxer payment confirmation and spending limits still apply.
@@ -48,13 +232,13 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
     // Pass under options.mcpServers.agentmuxer.
     ```
 
-    Returns an HTTP MCP server configuration with bearer authentication.
+    Returns an HTTP MCP server configuration with bearer authentication. Options type: `ClaudeAgentOptions`.
 
     <ParamField body="tools" type="McpServerToolPolicy[]">
       Each entry identifies a tool by `name`. Set `permission_policy` to `"always_allow"`, `"always_ask"`, or `"always_deny"`. The example preapproves search; unlisted tools retain their normal permissions. This option does not hide tools.
     </ParamField>
     <ParamField body="timeout" type="number">
-      Optional per-tool-call timeout in milliseconds. Claude ignores values below 1,000 ms. The helper does not override the framework default.
+      Optional per-tool-call timeout in milliseconds. Claude ignores values below 1,000 ms. The helper keeps the framework default when you omit it.
     </ParamField>
     <ParamField body="alwaysLoad" type="boolean">
       Set `true` to include this server's tools in the model context immediately instead of deferring them to Claude's tool search. Omit it to keep the framework default.
@@ -71,19 +255,28 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
     const mux = await agentmuxer({
       initializationOptions: { timeout: 10_000 },
     });
-    // Pass mux.tools to your agent; await mux.close() after it finishes.
+    // Pass mux.tools and mux.instructions to your agent; await mux.close() after it finishes.
     ```
 
-    Returns a promise for a connection. Automatic MCP tool-call retries are disabled.
+    Returns a promise for a connection. Each tool call runs once with a 100-second timeout. Options type: `AISDKOptions`.
 
     <ParamField body="initializationOptions" type="{ signal?: AbortSignal; timeout?: number; maxTotalTimeout?: number }">
-      Optional connection-initialization controls accepted by `@ai-sdk/mcp`. Timeouts are in milliseconds. These options do not set a purchase budget or a timeout for later tool calls.
+      Optional controls for connecting and listing tools, as accepted by `@modelcontextprotocol/client`. One deadline covers both, 60 seconds by default. Timeouts are in milliseconds.
+    </ParamField>
+    <ParamField body="confirmation" type='"manual"'>
+      Lets a person confirm purchases across HTTP requests. `call_offering` then returns an unresolved tool call that your server completes with `mux.purchase()` and `mux.resumePurchase()`. See [Manual purchase confirmation](https://www.npmjs.com/package/@agentmuxer/sdk#manual-purchase-confirmation) in the README.
+    </ParamField>
+    <ParamField body="mcpUrl" type="string">
+      A trusted server-side MCP endpoint. Defaults to the hosted one.
     </ParamField>
     <ParamField body="onUncaughtError" type="(error: unknown) => void">
       Optional callback for uncaught MCP client errors. Use it to report connection failures to your application. Redact credentials and sensitive tool data before logging errors.
     </ParamField>
-    <ResponseField name="tools" type="tool set">
+    <ResponseField name="tools" type="ToolSet">
       The discovered AgentMuxer tools, including purchases. Pass to your agent's `tools`.
+    </ResponseField>
+    <ResponseField name="instructions" type="string | undefined">
+      AgentMuxer's discovery, execution, and recovery guidance. Include it in your model instructions, and state that your budget and tool restrictions take precedence.
     </ResponseField>
     <ResponseField name="close" type="() => Promise<void>">
       Release the connection after the complete result or stream is consumed. Call in `finally`; HTTP streams also need cleanup on completion, error, and cancellation.
@@ -93,10 +286,10 @@ The SDK exports three framework-specific helpers. Each reads `AGENTMUXER_API_KEY
   </Tab>
 </Tabs>
 
-## Controls outside the helper
+## Controls outside the SDK
 
-Choose models, prompts, turn limits, and framework permissions in your agent framework. Configure balance, application spending limits, and account payment confirmation in AgentMuxer.
+Choose models, prompts, turn limits, and framework permissions in your agent framework. Configure balance, application spending limits, and payment confirmation in AgentMuxer.
 
-The helpers do not add an SDK-wide dollar budget, change your account settings, or supply model-provider credentials.
+Each call's maximum caps that call; for loops and agents, set a lifetime spending limit on the application. The SDK never changes your account settings or supplies model-provider credentials.
 
 <Card title="Billing, limits, and approvals" href="/guides/billing">Understand which controls enforce spending and which guide agent behavior.</Card>
