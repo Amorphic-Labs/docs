@@ -1,18 +1,241 @@
 ---
 title: "Changelog"
-description: "SDK releases and changes that affect your integration."
+description: "SDK, CLI, and platform releases that affect your integration."
 ---
-
-## SDK 0.1.0
-
-Initial release of `@agentmuxer/sdk`.
-
-- Connect OpenAI Agents, Claude Agent SDK, and Vercel AI SDK to AgentMuxer.
-- Authenticate with an application key through `AGENTMUXER_API_KEY` or `apiKey`.
-- Give agents discovery and purchase tools, subject to balance, spending limits, and payment confirmation settings.
-- Use TypeScript and ESM on Node.js 22.18 or later.
 
 <CardGroup cols={2}>
   <Card title="TypeScript SDK" href="/quickstart">Choose your integration.</Card>
   <Card title="Compatibility and upgrades" href="/reference/compatibility">Check runtime requirements and versioning.</Card>
 </CardGroup>
+
+<Update label="October 1, 2026" description="SDK 0.6.1 and CLI 0.2.1" tags={["SDK", "CLI"]}>
+  ## SDK 0.6.1
+
+  - An aborted call that used an idempotency key (`run`, execution commands, and Admin API key issuance) tells you to recover with the original key, and keeps the response `status` and `requestId`.
+  - A `ConnectionError` raised after response headers arrive keeps `status` and `requestId`.
+
+  ## CLI 0.2.1
+
+  - Requests name the CLI and its version in the `X-AgentMuxer-Client` header, so support can find your calls.
+  - The update check runs at most once a day, including when you are offline, and still shows a newer release it already knows about.
+  - Uses SDK 0.6.1.
+</Update>
+
+<Update label="September 30, 2026" description="SDK 0.6.0, CLI 0.2.0, and one-line agent setup" tags={["SDK", "CLI", "Platform"]}>
+  ## SDK 0.6.0
+
+  <Warning>
+    This release has breaking changes. Follow **Upgrading from 0.5** in the [SDK README](https://www.npmjs.com/package/@agentmuxer/sdk).
+  </Warning>
+
+  Breaking changes:
+
+  - The client is a class. Replace `createClient()` with `new AgentMuxer()` from `@agentmuxer/sdk`, and `createAdminClient()` with `new AgentMuxerAdmin()` from `@agentmuxer/sdk/admin`. The `@agentmuxer/sdk/client` entry is removed.
+  - Methods take `(input, options?)`. Pass an abort signal as `{ signal }` instead of a positional argument. A caller abort throws `AgentMuxerError` with kind `"aborted"`.
+  - Refusal reasons, `refusedBy`, `credentialKind`, and balance `status` are open string types. Add a `default` branch to exhaustive `switch` statements.
+  - The framework adapters' `AgentMuxerOptions` types are renamed to `OpenAIAgentsOptions`, `ClaudeAgentOptions`, and `AISDKOptions`.
+
+  New:
+
+  - `run` needs only a provider, path, and inputs. `method` is optional when the path serves one method, and the maximum cost defaults to $1.00. Pass `maxCost: "0.25"` as a USD string instead of `maxCostMicros`.
+  - `search`, `inspect`, `run`, `getInvocation`, `accountStatus`, and execution handle reads retry lost connections, timeouts, rate limits, and gateway errors twice by default, honoring `Retry-After`. `run` resends the same idempotency key, so a retry never charges twice.
+  - Set `timeout` (100 seconds by default) and `maxRetries` per client or per call, and pass a custom `fetch` to either client.
+  - New `ConnectionError`, `ConnectionTimeoutError`, `RateLimitError`, and `RefusalError` classes, and `throwOnRefusal` to throw for any result other than `responded`.
+  - `accountStatus()`, `inspect` with `view: "call_ready"`, `requestId` on results, and `require()` support for the root, `/contracts`, and `/admin` entries.
+  - Validation errors name the failing field.
+
+  ## CLI 0.2.0
+
+  <Warning>
+    This release changes how `install` and `status` behave in scripts and agents. Rerun `install` after upgrading to refresh the installed guidance.
+  </Warning>
+
+  Breaking changes:
+
+  - `install` run by an agent or without a terminal no longer signs in the CLI. It waits up to 330 seconds for browser approval, exits 0, and prints each remaining step as an `Owner action:` line. Run `agentmuxer login` before using API commands there, and `status` to confirm setup.
+  - With no coding agent detected, `install` exits 1 and points to [SKILL.md](https://agentmuxer.com/SKILL.md).
+  - `status` exits 0 when a coding agent is set up and the CLI is not signed in, printing `CLI: not signed in`. Scripts that call the API should check for that line or run `agentmuxer login`.
+  - A flag given to a command it doesn't apply to now fails with an error that names it.
+
+  New:
+
+  - Agents can run setup themselves. `install` asks no questions, configures every detected coding agent, starts sign-in for the agent it runs in, and hands the remaining steps to you. `--no-cli-login` skips only the CLI sign-in.
+  - `run PROVIDER PATH` needs only the provider, path, and inputs. `--method` is optional when the path serves one method, and the maximum cost defaults to $1.00. `run --query` takes a JSON object of query parameters.
+  - `inspect --view call_ready` shows the compact request view.
+  - API commands retry lost connections, timeouts, rate limits, and gateway errors up to twice with the same idempotency key, so a retry never charges twice.
+  - `agentmuxer help`, fuller help for every API command, and a once-a-day notice when a newer release is available. Set `AGENTMUXER_NO_UPDATE_CHECK=1` to turn the notice off.
+  - Licensed under MIT. Uses SDK 0.6.0.
+
+  ## One-line agent setup
+
+  - Paste `Set up AgentMuxer from https://agentmuxer.com/SKILL.md` into your coding agent. It runs setup, then relays the sign-in steps for you to finish in the same conversation.
+</Update>
+
+<Update label="September 29, 2026" description="Simpler calls" tags={["Platform"]}>
+  ## Simpler calls
+
+  - `maxCostMicros` is optional on `call_offering`. Each call's maximum defaults to $1.00, and `maxCost` takes a USD string such as `"0.25"` as an alternative to micros.
+  - `method` is optional on `call_offering` and `inspect_offering` when the path serves one method. When a path serves several, the response lists the methods to choose from.
+  - Invalid arguments name the failing field.
+</Update>
+
+<Update label="September 28, 2026" description="SDK 0.5.0, CLI 0.1.3, team accounts, and call-ready inspection" tags={["SDK", "CLI", "Platform"]}>
+  ## SDK 0.5.0
+
+  - New `@agentmuxer/sdk/admin` entry for the Admin API, with typed methods for the account balance, applications (create or get by your own external id, list, update, cap, disable), application keys (create, rotate with a grace period, revoke), and usage. SDK 0.6.0 renames `createAdminClient` to `new AgentMuxerAdmin()`.
+  - The package includes the Admin API's OpenAPI description (`admin-api.openapi.json`) and a runnable platform integration example.
+  - Results for application keys omit the account-wide balance (`billing.balanceMicros`), and account status reports `balance: null`. The CLI sign-in still shows your balance.
+  - Responses from search, inspect, run, `getInvocation`, and execution handles accept fields added by newer servers.
+  - An invalid `baseUrl` throws `AgentMuxerError` with kind `invalid_request`.
+
+  ## CLI 0.1.3
+
+  - `agentmuxer status` accepts account fields added by newer servers. Uses SDK 0.5.0.
+
+  ## Team accounts
+
+  - Invite teammates from the dashboard's **Members** page. Members use the account's credits with their own agents, and admins also manage applications and members. Invitation links work for the invited email address and stay valid for 7 days.
+
+  ## Call-ready inspection
+
+  - `inspect_offering` returns a compact, call-ready view of each request: the fields, types, and locations your agent needs for a valid first call.
+</Update>
+
+<Update label="September 26, 2026" description="Admin API" tags={["Platform"]}>
+  ## Admin API
+
+  - Manage your account from your servers at `https://api.agentmuxer.com/v1/admin` with an admin key created on the dashboard's **Applications** page. Create one application per customer company, cap its spending, issue and rotate its keys, and read usage.
+  - Admin keys manage applications, and application keys make calls. All applications draw on your account's balance.
+</Update>
+
+<Update label="September 25, 2026" description="SDK 0.3.1, SDK 0.4.0, CLI 0.1.1, and CLI 0.1.2" tags={["SDK", "CLI"]}>
+  ## SDK 0.4.0
+
+  - Execution handles (`client.execution(...)`) attach to an existing call to wait for its result, stream its progress, follow a provider job that continues after its first response, resume a pending approval, and stop following.
+  - The `partition` option separates calls and results per end user within one application key. Derive it from your own authenticated users.
+  - The Vercel AI SDK connection exposes AgentMuxer's `instructions`, validates purchase arguments before the tool runs so the model can correct them, and accepts a trusted server-side `mcpUrl`.
+  - The initialization signal and deadline also cover tool discovery.
+
+  ## SDK 0.3.1
+
+  - Type-checking fix for the Vercel AI SDK adapter. Runtime behavior and public interfaces are unchanged.
+
+  ## CLI 0.1.1 and 0.1.2
+
+  - Simpler installed guidance: agents call `search_offerings` without extra options.
+  - Uses SDK 0.3.1 and 0.4.0.
+</Update>
+
+<Update label="September 23, 2026" description="CLI 0.1.0, SDK 0.3.0, provider and path addressing, and search ranking" tags={["SDK", "CLI", "Platform"]}>
+  ## CLI 0.1.0
+
+  Initial release of `@agentmuxer/cli`, which replaces `@agentmuxer/setup` and the `agentmuxer` command from SDK 0.2.
+
+  - `install`, `status`, and `remove` set up AgentMuxer's hosted MCP server and guidance in Codex, Claude Code, and OpenCode, using each client's own sign-in.
+  - `login` and `logout` sign the CLI in through your browser and keep credentials in the OS keyring.
+  - `search`, `inspect`, `run`, and `get` call AgentMuxer from a terminal or script.
+  - To move from setup, run `npx -y @agentmuxer/cli@latest install`.
+
+  ## SDK 0.3.0
+
+  <Warning>
+    The `agentmuxer` command moved to `@agentmuxer/cli`, and the SDK is a library only. Run `npm uninstall -g @agentmuxer/sdk` before installing the CLI globally.
+  </Warning>
+
+  - `accessToken` is accepted instead of `apiKey` for an already-issued AgentMuxer access token.
+  - New `@agentmuxer/sdk/contracts` entry with the request types and validators.
+
+  ## Call APIs by provider and path
+
+  <Warning>
+    Breaking change for direct MCP integrations. Replace `offeringVersionId` with the `provider`, `path`, and `method` from search results.
+  </Warning>
+
+  - `search_offerings` returns operations as provider, method, and path addresses. `inspect_offering` and `call_offering` take that address, with path values in `pathParams` and inputs in `query`, `headers`, `cookies`, or `body`.
+  - Call a known operation directly, without searching first.
+  - New `get_invocation` tool recovers a lost response or checks a pending call by `invocationId` or the original `idempotencyKey`, at no charge.
+
+  ## Search ranking
+
+  - `search_offerings` ranks results by how closely each operation fits your query.
+</Update>
+
+<Update label="September 22, 2026" description="SDK 0.2.0, SDK 0.2.1, and per-application confirmation" tags={["SDK", "Platform"]}>
+  ## SDK 0.2.1
+
+  <Warning>
+    Breaking change for the Vercel AI SDK adapter, despite the patch version. Replace `@ai-sdk/mcp` with the `ai` and `@modelcontextprotocol/client` packages in your dependencies.
+  </Warning>
+
+  - Vercel AI SDK transport errors use the MCP client's error classes.
+  - Manual purchase confirmation can pause and resume on a later authenticated request, keeping the original purchase and tool call.
+  - Vercel AI SDK tool calls allow 100 seconds.
+
+  ## SDK 0.2.0
+
+  - A direct API client with no framework dependency, addressing operations by provider, method, and path.
+  - Automatic recovery keys on every call, and explicit original keys for accepting changed terms.
+  - Typed discovery, inspection, invocation results, and read-only invocation lookup.
+  - An `agentmuxer` command with JSON, file, and stdin input. It moved to `@agentmuxer/cli` on September 23.
+  - Framework adapter imports and authentication are compatible with 0.1.0.
+
+  ## Payment confirmation per application
+
+  - Choose on the dashboard's **Applications** page whether each application's paid calls follow the account default, require confirmation, or run unattended within your spending limits. See [billing and approvals](/guides/billing).
+</Update>
+
+<Update label="September 21, 2026" description="Structured pricing" tags={["Platform"]}>
+  ## Structured pricing
+
+  - Search results show structured pricing for each operation: a fixed total, a unit rate, an observed estimate, or an unknown price.
+</Update>
+
+<Update label="September 16, 2026" description="SDK 0.1.0" tags={["SDK"]}>
+  ## SDK 0.1.0
+
+  Initial release of `@agentmuxer/sdk`.
+
+  - Connect OpenAI Agents, Claude Agent SDK, and Vercel AI SDK to AgentMuxer.
+  - Authenticate with an application key through `AGENTMUXER_API_KEY` or `apiKey`.
+  - Give agents discovery and purchase tools, subject to balance, spending limits, and payment confirmation settings.
+  - Use TypeScript and ESM on Node.js 22.18 or later.
+
+</Update>
+
+<Update label="September 15, 2026" description="Setup 0.1.4 to 0.1.6 and price confirmation through your agent" tags={["Setup", "Platform"]}>
+  ## Setup 0.1.4 to 0.1.6
+
+  - Setup detects which supported clients are installed and adds AgentMuxer guidance to each one's global instructions.
+  - Concurrent setup runs wait their turn, and each configuration file is updated atomically.
+  - `remove` cleans up configuration left behind after you uninstall a client.
+
+  ## Price confirmation through your agent
+
+  - When a call's price is above your maximum, `call_offering` returns the exact terms. To accept them, repeat the call with the same arguments plus `acceptTerms` from `nextAction`. See the [MCP tool reference](/reference/mcp).
+</Update>
+
+<Update label="September 6, 2026" description="Setup 0.1.2 and 0.1.3" tags={["Setup"]}>
+  ## Setup 0.1.2 and 0.1.3
+
+  - Setup keeps your existing sign-ins and client registrations, including OpenCode credentials after an access token expires.
+  - `status` recognizes Claude Code's connected status.
+</Update>
+
+<Update label="September 4, 2026" description="Setup 0.1.1 and sign-in on connect" tags={["Setup", "Platform"]}>
+  ## Sign-in on connect
+
+  - `https://mcp.agentmuxer.com/mcp` asks for sign-in when a client first connects, so discovery and paid calls both run under your account. Clients that support MCP authorization start the browser sign-in for you.
+
+  ## Setup 0.1.1
+
+  - Setup treats sign-in as a required step and guides you through it.
+</Update>
+
+<Update label="September 3, 2026" description="Setup 0.1.0" tags={["Setup"]}>
+  ## Setup 0.1.0
+
+  Initial release of `@agentmuxer/setup`.
+
+  - `install`, `status`, and `remove` connect Codex, Claude Code, and OpenCode to AgentMuxer's hosted MCP server. See [connect your agent](/guides/connect).
+  - Setup preserves your existing client settings and rolls back cleanly if a step fails.
+</Update>
