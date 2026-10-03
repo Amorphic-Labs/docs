@@ -13,6 +13,7 @@ This page describes `@agentmuxer/sdk` 0.6.x.
 | Node.js 22.18+ with CommonJS (`require()`) | Supported for `@agentmuxer/sdk`, `@agentmuxer/sdk/contracts`, and `@agentmuxer/sdk/admin` |
 | Framework adapters (`/openai`, `/claude-agent`, `/ai-sdk`) | Load with `import` from ESM |
 | Browser or mobile bundle | Keep application keys on your server; the SDK refuses to use a key in a browser |
+| Bun, Deno, Cloudflare Workers, and other edge runtimes | Not supported yet; support is planned |
 
 ```js
 const { AgentMuxer } = require("@agentmuxer/sdk");
