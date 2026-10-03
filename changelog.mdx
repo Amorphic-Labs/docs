@@ -126,7 +126,7 @@ description: "SDK, CLI, and platform releases that affect your integration."
   - Uses SDK 0.3.1 and 0.4.0.
 </Update>
 
-<Update label="September 23, 2026" description="CLI 0.1.0, SDK 0.3.0, and provider and path addressing" tags={["SDK", "CLI", "Platform"]}>
+<Update label="September 23, 2026" description="CLI 0.1.0, SDK 0.3.0, provider and path addressing, and search ranking" tags={["SDK", "CLI", "Platform"]}>
   ## CLI 0.1.0
 
   Initial release of `@agentmuxer/cli`, which replaces `@agentmuxer/setup` and the `agentmuxer` command from SDK 0.2.
@@ -154,6 +154,10 @@ description: "SDK, CLI, and platform releases that affect your integration."
   - `search_offerings` returns operations as provider, method, and path addresses. `inspect_offering` and `call_offering` take that address, with path values in `pathParams` and inputs in `query`, `headers`, `cookies`, or `body`.
   - Call a known operation directly, without searching first.
   - New `get_invocation` tool recovers a lost response or checks a pending call by `invocationId` or the original `idempotencyKey`, at no charge.
+
+  ## Search ranking
+
+  - `search_offerings` ranks results by how closely each operation fits your query.
 </Update>
 
 <Update label="September 22, 2026" description="SDK 0.2.0, SDK 0.2.1, and per-application confirmation" tags={["SDK", "Platform"]}>
@@ -178,10 +182,6 @@ description: "SDK, CLI, and platform releases that affect your integration."
   ## Payment confirmation per application
 
   - Choose on the dashboard's **Applications** page whether each application's paid calls follow the account default, require confirmation, or run unattended within your spending limits. See [billing and approvals](/guides/billing).
-
-  ## Search ranking
-
-  - `search_offerings` ranks results by how closely each operation fits your query.
 </Update>
 
 <Update label="September 16, 2026" description="SDK 0.1.0" tags={["SDK", "Platform"]}>
@@ -199,15 +199,13 @@ description: "SDK, CLI, and platform releases that affect your integration."
   - Search results show structured pricing for each operation: a fixed total, a unit rate, an observed estimate, or an unknown price.
 </Update>
 
-<Update label="September 15, 2026" description="Setup 0.1.4 to 0.1.6" tags={["Setup"]}>
+<Update label="September 15, 2026" description="Setup 0.1.4 to 0.1.6 and price confirmation through your agent" tags={["Setup", "Platform"]}>
   ## Setup 0.1.4 to 0.1.6
 
   - Setup detects which supported clients are installed and adds AgentMuxer guidance to each one's global instructions.
   - Concurrent setup runs wait their turn, and each configuration file is updated atomically.
   - `remove` cleans up configuration left behind after you uninstall a client.
-</Update>
 
-<Update label="September 11, 2026" description="Price confirmation through your agent" tags={["Platform"]}>
   ## Price confirmation through your agent
 
   - When a call's price is above your maximum, `call_offering` returns the exact terms. To accept them, repeat the call with the same arguments plus `acceptTerms` from `nextAction`. See the [MCP tool reference](/reference/mcp).
